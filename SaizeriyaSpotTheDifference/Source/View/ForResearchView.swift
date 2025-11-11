@@ -57,13 +57,32 @@ struct ForResearchView: View {
             let ciRight = CIImage(image: right)
         else { return }
 
-        let diffFilter = CIFilter.differenceBlendMode()
-        diffFilter.inputImage = ciLeft
-        diffFilter.backgroundImage = ciRight
+        // --- ① 軽くぼかす ---
+        let blurRadius: CGFloat = 2.0
+        let blurLeft = ciLeft.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": blurRadius])
+        let blurRight = ciRight.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": blurRadius])
 
-        if let diffOutput = diffFilter.outputImage,
-           let cgimg = context.createCGImage(diffOutput, from: diffOutput.extent) {
+        // --- ② 差分 ---
+        let diffFilter = CIFilter.differenceBlendMode()
+        diffFilter.inputImage = blurLeft
+        diffFilter.backgroundImage = blurRight
+        guard var diffOutput = diffFilter.outputImage else { return }
+
+        // --- ③ 明暗を極端に強調（しきい値風） ---
+        let controls = CIFilter.colorControls()
+        controls.inputImage = diffOutput
+        controls.saturation = 0.0    // モノクロ化
+        controls.contrast = 5.0      // コントラストを強く
+        controls.brightness = 0.3
+        diffOutput = controls.outputImage ?? diffOutput
+
+        // --- ④ 小さなノイズをぼかして除去（任意） ---
+        diffOutput = diffOutput.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": 0.5])
+
+        // --- ⑤ 出力 ---
+        if let cgimg = context.createCGImage(diffOutput, from: diffOutput.extent) {
             diffImage = UIImage(cgImage: cgimg)
         }
     }
+
 }
