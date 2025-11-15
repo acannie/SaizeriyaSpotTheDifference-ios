@@ -25,7 +25,7 @@ struct TopView: View {
 
 private extension TopView {
     var topBar: some View {
-        Text("さあはじめましょう！")
+        Text("答え合わせの時間だ！")
             .font(.system(size: 20, weight: .bold))
             .foregroundStyle(.commonPrimary)
             .padding(.vertical, 8)
