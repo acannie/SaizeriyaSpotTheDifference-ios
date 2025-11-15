@@ -9,10 +9,13 @@ import SwiftUI
 
 struct TopView: View {
     var body: some View {
-        VStack {
+        VStack(spacing: 32) {
             topBar
             Spacer()
-            logo
+            VStack(spacing: 10) {
+                LogomarkView()
+                LogoTextView()
+            }
             startButton
             Spacer()
             bottomBar
@@ -28,10 +31,6 @@ private extension TopView {
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
             .background(.commonGreen)
-    }
-
-    var logo: some View {
-        Image(systemName: "heart.fill")
     }
 
     var startButton: some View {
