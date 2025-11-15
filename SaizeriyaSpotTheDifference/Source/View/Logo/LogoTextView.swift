@@ -25,7 +25,7 @@ private extension LogoTextView {
 
     var bottomText: some View {
         Text("チートツール")
-            .font(.system(size: 36, weight: .black))
+            .font(.system(size: 46, weight: .black))
             .foregroundColor(.commonRed)
     }
 }
