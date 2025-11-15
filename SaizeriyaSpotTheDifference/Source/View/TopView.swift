@@ -36,11 +36,13 @@ private extension TopView {
 
     var startButton: some View {
         Button(
-            action: {},
-            label: {
-                Text("aaa")
-            }
-        )
+            action: {}
+        ) {
+            RedButtonView(
+                label: "間違い探しをはじめる",
+                fontSize: 28
+            )
+        }
     }
 
     var bottomBar: some View {
