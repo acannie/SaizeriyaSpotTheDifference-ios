@@ -27,7 +27,7 @@ struct TabBarButtonView: View {
         ZStack {
             if isSelected {
                 RoundedRectangle(cornerRadius: buttonCornerRadius + selectedButtonBorder)
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(.buttonTabBarBorder)
                     .frame(
                         width: buttonSize.width + selectedButtonBorder * 2,
                         height: buttonSize.height + selectedButtonBorder * 2
@@ -45,12 +45,12 @@ struct TabBarButtonView: View {
                 .background(
                     RadialGradient(
                         gradient: Gradient(stops: [
-                            .init(color: .white, location: 0.0),
-                            .init(color: .black, location: 1.0)
+                            .init(color: .buttonTabBarBackgroundCenter, location: 0.0),
+                            .init(color: .buttonTabBarBackgroundOutside, location: 1.0)
                         ]),
                         center: .center,
-                        startRadius: 25,
-                        endRadius: 200
+                        startRadius: 10,
+                        endRadius: 60
                     )
                 )
                 .cornerRadius(buttonCornerRadius)
