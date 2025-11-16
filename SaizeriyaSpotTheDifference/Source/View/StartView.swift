@@ -34,7 +34,9 @@ private extension StartView {
     }
 
     var startButton: some View {
-        NavigationLink(destination: Text("aaa")) {
+        NavigationLink(
+            destination: TopView()
+        ) {
             RedButtonView(
                 label: "間違い探しをはじめる",
                 fontSize: 28
