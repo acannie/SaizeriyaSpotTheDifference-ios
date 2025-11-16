@@ -1,5 +1,5 @@
 //
-//  TopView.swift
+//  StartView.swift
 //  SaizeriyaSpotTheDifference
 //
 //  Created by SASAOKA Akane on 2025/11/16.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TopView: View {
+struct StartView: View {
     var body: some View {
         VStack(spacing: 32) {
             topBar
@@ -23,7 +23,7 @@ struct TopView: View {
     }
 }
 
-private extension TopView {
+private extension StartView {
     var topBar: some View {
         Text("答え合わせの時間だ！")
             .font(.system(size: 20, weight: .bold))
@@ -34,9 +34,7 @@ private extension TopView {
     }
 
     var startButton: some View {
-        Button(
-            action: {}
-        ) {
+        NavigationLink(destination: Text("aaa")) {
             RedButtonView(
                 label: "間違い探しをはじめる",
                 fontSize: 28
@@ -55,5 +53,5 @@ private extension TopView {
 }
 
 #Preview {
-    TopView()
+    StartView()
 }
