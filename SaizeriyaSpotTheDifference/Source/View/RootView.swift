@@ -34,7 +34,7 @@ private extension RootView {
     }
 
     var content: some View {
-        Group {
+        ZStack {
             switch selectedPage {
             case .start:
                 StartView {
@@ -48,6 +48,8 @@ private extension RootView {
             }
         }
         .frame(maxHeight: .infinity)
+        .transition(.opacity)
+        .animation(.bouncy, value: selectedPage)
     }
 
     var bottomBar: some View {
