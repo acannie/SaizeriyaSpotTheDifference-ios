@@ -40,15 +40,6 @@ private extension StartView {
             )
         }
     }
-
-    var bottomBar: some View {
-        Text("Let's spot the difference!")
-            .font(.system(size: 14))
-            .foregroundStyle(.commonPrimary)
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
-    }
 }
 
 #Preview {

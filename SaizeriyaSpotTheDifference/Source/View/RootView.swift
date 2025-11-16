@@ -60,7 +60,7 @@ private extension RootView {
                 .background(.commonGreen)
         case .main:
             HStack(spacing: 4) {
-                ForEach(Array(MainTab.allCases), id: \.self) { (tab: MainTab) in
+                ForEach(Array(MainTab.allCases), id: \.self) { tab in
                     Button {
                         selectedTab = tab
                     } label: {
