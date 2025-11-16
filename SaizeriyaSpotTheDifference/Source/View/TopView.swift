@@ -32,7 +32,10 @@ struct TopView: View {
                             selectedPage = page
                         }
                     ) {
-                        Text(page.rawValue)
+                        TabBarButtonView(
+                            text: page.rawValue,
+                            isSelected: page == selectedPage
+                        )
                     }
                 }
             }
