@@ -34,22 +34,35 @@ struct LogomarkView: View {
                 .fill(.commonPrimary)
                 .frame(width: secondEllipseSize.width, height: overlayRectangleHeight)
                 .offset(y: -overlayRectangleOffsetY)
-            // 大きな文字
+            // Mの文字
             mText
-            Text("𝐚𝐜𝐡𝐢𝐠𝐚𝐢")
-                .foregroundStyle(.commonRed)
-                .font(.system(size: 45))
-                .offset(x: 25, y: -5)
-            // 小さな文字
-            Text("sagasouze everyone")
-                .foregroundStyle(.commonRed)
-                .font(.system(size: 12, weight: .semibold))
-                .offset(x: 15, y: 27)
             // 文字間の線
             Capsule()
                 .foregroundStyle(.commonRed)
                 .frame(width: 160, height: 5)
                 .offset(x: 30, y: 20)
+            // 大きな文字
+            HStack(spacing: 0) {
+                ForEach(Array("𝐚𝐜𝐡𝐢𝐠𝐚𝐢").enumerated().map { $0 }, id: \.offset) { _, char in
+                    ZStack {
+                        if char == "𝐠" {
+                            Text(String(char))
+                                .foregroundStyle(.commonPrimary)
+                                .font(.system(size: 45))
+                                .offset(x: 2, y: 2)
+                        }
+                        Text(String(char))
+                            .foregroundStyle(.commonRed)
+                            .font(.system(size: 45))
+                    }
+                }
+            }
+            .offset(x: 25, y: -4)
+            // 小さな文字
+            Text("sagasouze everyone")
+                .foregroundStyle(.commonRed)
+                .font(.system(size: 12, weight: .semibold))
+                .offset(x: 15, y: 27)
             mark
                 .offset(y: -45)
             // 外側の楕円
