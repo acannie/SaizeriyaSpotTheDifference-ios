@@ -29,6 +29,8 @@ private extension RootView {
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
             .background(.commonGreen)
+            .transition(.opacity)
+            .animation(.bouncy, value: topBarText)
     }
 
     var content: some View {
@@ -48,32 +50,38 @@ private extension RootView {
         .frame(maxHeight: .infinity)
     }
 
-    @ViewBuilder
     var bottomBar: some View {
-        switch selectedPage {
-        case .start:
-            Text("Let's spot the difference!")
-                .font(.system(size: 14))
-                .foregroundStyle(.commonPrimary)
-                .padding(.vertical, 4)
-                .frame(maxWidth: .infinity)
-                .background(.commonGreen)
-        case .main:
-            HStack(spacing: 4) {
-                ForEach(Array(MainTab.allCases), id: \.self) { tab in
-                    Button {
-                        selectedTab = tab
-                    } label: {
-                        TabBarButtonView(
-                            text: tab.text,
-                            isSelected: tab == selectedTab
-                        )
+        ZStack {
+            switch selectedPage {
+            case .start:
+                Text("Let's spot the difference!")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.commonPrimary)
+                    .padding(.vertical, 4)
+                    .transition(.opacity)
+            case .main:
+                HStack(spacing: 4) {
+                    ForEach(Array(MainTab.allCases), id: \.self) { tab in
+                        Button {
+                            selectedTab = tab
+                        } label: {
+                            TabBarButtonView(
+                                text: tab.text,
+                                isSelected: tab == selectedTab
+                            )
+                        }
                     }
                 }
+                .padding(.vertical, 6)
+                .transition(.opacity.animation(.easeInOut(duration: 0.3).delay(0.3)))
             }
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
         }
+        .frame(maxWidth: .infinity)
+        .background(.commonGreen)
+        .animation(.bouncy, value: selectedPage)
     }
+}
+
+#Preview {
+    RootView()
 }
