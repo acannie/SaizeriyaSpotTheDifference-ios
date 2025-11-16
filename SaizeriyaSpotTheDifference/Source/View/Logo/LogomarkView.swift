@@ -57,12 +57,12 @@ struct LogomarkView: View {
                     }
                 }
             }
-            .offset(x: 25, y: -4)
+            .offset(x: 26, y: -3)
             // 小さな文字
-            Text("sagasouze everyone")
+            Text("SAGASOUZE EVERYONE")
                 .foregroundStyle(.commonRed)
-                .font(.system(size: 12, weight: .semibold))
-                .offset(x: 15, y: 27)
+                .font(.system(size: 10, weight: .semibold))
+                .offset(x: 15, y: 28)
             mark
                 .offset(y: -45)
             // 外側の楕円
