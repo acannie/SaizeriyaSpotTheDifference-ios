@@ -8,24 +8,26 @@
 import SwiftUI
 
 struct TopView: View {
+    private enum Page: String, CaseIterable {
+        case cheat = "差分検出"
+        case collection = "コレクション"
+        case environmentSetting = "環境設定"
+    }
+    @State private var selectedPage: Page = .cheat
+
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 0) {
             topBar
-            Spacer()
-            VStack(spacing: 10) {
-                LogomarkView()
-                LogoTextView()
-            }
-            startButton
-            Spacer()
+            mainContent
             bottomBar
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
 private extension TopView {
     var topBar: some View {
-        Text("答え合わせの時間だ！")
+        Text("ほげほげ")
             .font(.system(size: 20, weight: .bold))
             .foregroundStyle(.commonPrimary)
             .padding(.vertical, 8)
@@ -33,24 +35,38 @@ private extension TopView {
             .background(.commonGreen)
     }
 
-    var startButton: some View {
-        Button(
-            action: {}
-        ) {
-            RedButtonView(
-                label: "間違い探しをはじめる",
-                fontSize: 28
-            )
+    var mainContent: some View {
+        Group {
+            switch selectedPage {
+            case .cheat:
+                CheatView()
+            case .collection:
+                CollectionView()
+            case .environmentSetting:
+                EnvironmentSettingView()
+            }
         }
+        .frame(maxHeight: .infinity)
     }
 
     var bottomBar: some View {
-        Text("Let's spot the difference!")
-            .font(.system(size: 14))
-            .foregroundStyle(.commonPrimary)
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
+        HStack(spacing: 4) {
+            ForEach(Page.allCases, id: \.self) { page in
+                Button(
+                    action: {
+                        selectedPage = page
+                    }
+                ) {
+                    TabBarButtonView(
+                        text: page.rawValue,
+                        isSelected: page == selectedPage
+                    )
+                }
+            }
+        }
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity)
+        .background(.commonGreen)
     }
 }
 
