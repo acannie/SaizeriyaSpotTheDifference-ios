@@ -120,6 +120,7 @@ private extension LogomarkView {
             ForEach(Side.allCases, id: \.self) { side in
                 Image(systemName: side.isLeft ? "laurel.leading" : "laurel.trailing")
                     .resizable()
+                    .fontWeight(.black)
                     .foregroundStyle(.commonGreen)
                     .frame(width: 10, height: 30)
                     .rotationEffect(.degrees(side.unit * 20))
