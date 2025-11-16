@@ -15,11 +15,9 @@ struct LogomarkView: View {
     private var overlayRectangleHeight: CGFloat {
         secondEllipseSize.height - bottomFillHeight
     }
-    private var distanceFromEllipseCenterToBottomFill: CGFloat {
-        (secondEllipseSize.height / 2) - bottomFillHeight
-    }
     private var overlayRectangleOffsetY: CGFloat {
-        (overlayRectangleHeight / 2) - distanceFromEllipseCenterToBottomFill
+        let distanceFromEllipseCenterToBottomFill = (secondEllipseSize.height / 2) - bottomFillHeight
+        return (overlayRectangleHeight / 2) - distanceFromEllipseCenterToBottomFill
     }
     private let mTextBackgroundSize = CGSize(width: 90, height: 95)
 
