@@ -1,0 +1,79 @@
+//
+//  RootView.swift
+//  SaizeriyaSpotTheDifference
+//
+//  Created by SASAOKA Akane on 2025/11/16.
+//
+
+import SwiftUI
+
+struct RootView: View {
+    @State private var selectedPage: Page = .start
+    @State private var selectedTab: MainTab = .cheat
+    @State private var topBarText: String = "答え合わせの時間だ！"
+
+    var body: some View {
+        VStack {
+            topBar
+            content
+            bottomBar
+        }
+    }
+}
+
+private extension RootView {
+    var topBar: some View {
+        Text(topBarText)
+            .font(.system(size: 20, weight: .bold))
+            .foregroundStyle(.commonPrimary)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(.commonGreen)
+    }
+
+    var content: some View {
+        Group {
+            switch selectedPage {
+            case .start:
+                StartView {
+                    selectedPage = .main
+                }
+            case .main:
+                MainView(
+                    topBarText: $topBarText,
+                    tab: selectedTab
+                )
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    var bottomBar: some View {
+        switch selectedPage {
+        case .start:
+            Text("Let's spot the difference!")
+                .font(.system(size: 14))
+                .foregroundStyle(.commonPrimary)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity)
+                .background(.commonGreen)
+        case .main:
+            HStack(spacing: 4) {
+                ForEach(Array(MainTab.allCases), id: \.self) { (tab: MainTab) in
+                    Button {
+                        selectedTab = tab
+                    } label: {
+                        TabBarButtonView(
+                            text: tab.text,
+                            isSelected: tab == selectedTab
+                        )
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
+            .background(.commonGreen)
+        }
+    }
+}

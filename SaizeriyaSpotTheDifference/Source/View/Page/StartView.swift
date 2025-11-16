@@ -8,9 +8,14 @@
 import SwiftUI
 
 struct StartView: View {
+    private let transitionAction: () -> Void
+
+    init(transitionAction: @escaping () -> Void) {
+        self.transitionAction = transitionAction
+    }
+
     var body: some View {
         VStack(spacing: 32) {
-            topBar
             Spacer()
             VStack(spacing: 10) {
                 LogomarkView()
@@ -18,24 +23,16 @@ struct StartView: View {
             }
             startButton
             Spacer()
-            bottomBar
         }
     }
 }
 
 private extension StartView {
-    var topBar: some View {
-        Text("答え合わせの時間だ！")
-            .font(.system(size: 20, weight: .bold))
-            .foregroundStyle(.commonPrimary)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
-    }
-
     var startButton: some View {
-        NavigationLink(
-            destination: TopView()
+        Button(
+            action: {
+                transitionAction()
+            }
         ) {
             RedButtonView(
                 label: "間違い探しをはじめる",
@@ -55,5 +52,5 @@ private extension StartView {
 }
 
 #Preview {
-    StartView()
+    StartView {}
 }
