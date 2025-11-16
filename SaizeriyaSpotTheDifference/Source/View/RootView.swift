@@ -13,7 +13,7 @@ struct RootView: View {
     @State private var topBarText: String = "答え合わせの時間だ！"
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             topBar
             content
             bottomBar
