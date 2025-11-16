@@ -10,7 +10,7 @@ import SwiftUI
 struct TabBarButtonView: View {
     private let buttonSize = CGSize(width: 70, height: 60)
     private let buttonCornerRadius: CGFloat = 4
-    private let selectedButtonBorder: CGFloat = 2
+    private let selectedButtonBorder: CGFloat = 3
     private let text: String
     private let isSelected: Bool
 
