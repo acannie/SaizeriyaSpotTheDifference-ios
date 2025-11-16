@@ -94,6 +94,11 @@ private extension LogomarkView {
                 .trim(from: 0.08, to: 0.42)
                 .stroke(.commonRed, lineWidth: 5)
                 .frame(width: mTextBackgroundSize.width - 15, height: mTextBackgroundSize.height - 15)
+            // 赤い線左端の角丸
+            Circle()
+                .fill(.commonRed)
+                .frame(width: 5, height: 5)
+                .offset(x: -33, y: 19)
         }
         .offset(x: -80)
     }
