@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct StartView: View {
-    @State private var shouldOpenMain = false
-    private let transitionAction: () -> Void
+    @State private var startsAnimation: Bool = false
+    @Binding private var selectedPage: Page
 
-    init(transitionAction: @escaping () -> Void) {
-        self.transitionAction = transitionAction
+    init(selectedPage: Binding<Page>) {
+        self._selectedPage = selectedPage
     }
 
     var body: some View {
@@ -20,26 +20,26 @@ struct StartView: View {
             Spacer()
             VStack(spacing: 10) {
                 LogomarkView()
-                    .opacity(shouldOpenMain ? 0 : 1)
-                    .offset(y: shouldOpenMain ? -150 : 0)
+                    .opacity(startsAnimation ? 0 : 1)
+                    .offset(y: startsAnimation ? -150 : 0)
                     .animation(
                         .easeIn(duration: 0.3).delay(0.0),
-                        value: shouldOpenMain
+                        value: startsAnimation
                     )
                 LogoTextView()
-                    .opacity(shouldOpenMain ? 0 : 1)
-                    .offset(y: shouldOpenMain ? -150 : 0)
+                    .opacity(startsAnimation ? 0 : 1)
+                    .offset(y: startsAnimation ? -150 : 0)
                     .animation(
                         .easeIn(duration: 0.3).delay(0.1),
-                        value: shouldOpenMain
+                        value: startsAnimation
                     )
             }
             startButton
-                .opacity(shouldOpenMain ? 0 : 1)
-                .offset(y: shouldOpenMain ? -150 : 0)
+                .opacity(startsAnimation ? 0 : 1)
+                .offset(y: startsAnimation ? -150 : 0)
                 .animation(
                     .easeIn(duration: 0.3).delay(0.2),
-                    value: shouldOpenMain
+                    value: startsAnimation
                 )
             Spacer()
         }
@@ -51,9 +51,9 @@ private extension StartView {
         Button(
             action: {
                 Task {
-                    shouldOpenMain = true
+                    startsAnimation = true
                     try! await Task.sleep(for: .seconds(0.7))
-                    transitionAction()
+                    selectedPage = .main
                 }
             }
         ) {
@@ -66,5 +66,5 @@ private extension StartView {
 }
 
 #Preview {
-    StartView {}
+    StartView(selectedPage: .constant(.start))
 }

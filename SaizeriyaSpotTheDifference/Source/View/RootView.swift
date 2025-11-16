@@ -37,9 +37,7 @@ private extension RootView {
         ZStack {
             switch selectedPage {
             case .start:
-                StartView {
-                    selectedPage = .main
-                }
+                StartView(selectedPage: $selectedPage)
             case .main:
                 MainView(
                     topBarText: $topBarText,
