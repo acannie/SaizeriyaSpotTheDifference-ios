@@ -11,6 +11,7 @@ struct ShootingScreenView: View {
     @EnvironmentObject private var headerViewModel: HeaderViewModel
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
+    @State private var enableShootingButton: Bool = true
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
         let horizontalPadding: CGFloat = 10
@@ -53,6 +54,7 @@ private extension ShootingScreenView {
     var shootingButton: some View {
         Button(
             action: {
+                enableShootingButton = false
                 camera.takePhoto()
             }
         ) {
@@ -66,6 +68,7 @@ private extension ShootingScreenView {
             }
             .shadow(radius: 4)
         }
+        .disabled(!enableShootingButton)
     }
 
     var guideLine: some View {
