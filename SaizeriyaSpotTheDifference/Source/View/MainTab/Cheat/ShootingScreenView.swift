@@ -11,6 +11,7 @@ struct ShootingScreenView: View {
     @State private var image: UIImage?
     @Binding private var topBarText: String
     @StateObject private var camera = CameraManager()
+    private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
         let horizontalPadding: CGFloat = 10
         let width = UIScreen.main.bounds.width - horizontalPadding * 2
@@ -23,12 +24,14 @@ struct ShootingScreenView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                CameraPreview(session: camera.session)
+        ZStack {
+            CameraPreview(session: camera.session)
+            VStack {
+                Spacer()
                 guideLine
+                Spacer()
+                footer
             }
-            footer
         }
         .onChange(of: camera.capturedImage) {
             if let image = camera.capturedImage {
@@ -48,7 +51,7 @@ private extension ShootingScreenView {
         }
         .frame(height: 130)
         .frame(maxWidth: .infinity)
-        .background(.black)
+        .background(.cameraBackground)
     }
 
     var shootingButton: some View {
@@ -57,15 +60,15 @@ private extension ShootingScreenView {
                 camera.takePhoto()
             }
         ) {
-            Circle()
-                .fill(.white.opacity(0.9))
-                .frame(width: 80, height: 80)
-                .overlay(
-                    Circle()
-                        .stroke(.white, lineWidth: 4)
-                        .frame(width: 90, height: 90)
-                )
-                .shadow(radius: 4)
+            ZStack {
+                Circle()
+                    .fill(.shutterButtonOutline)
+                    .frame(width: 90, height: 90)
+                Circle()
+                    .fill(.shutterButtonFill)
+                    .frame(width: 75, height: 75)
+            }
+            .shadow(radius: 4)
         }
     }
 
@@ -73,12 +76,12 @@ private extension ShootingScreenView {
         ZStack {
             // 枠
             Rectangle()
-                .stroke(.white, lineWidth: 2)
+                .stroke(.cameraGuideLine, lineWidth: guideLineWidth)
                 .frame(width: guideLineSize.width, height: guideLineSize.height)
             // 中央の線
             Rectangle()
-                .fill(.white)
-                .frame(width: 2, height: guideLineSize.height)
+                .fill(.cameraGuideLine)
+                .frame(width: guideLineWidth, height: guideLineSize.height - guideLineWidth * 2)
         }
     }
 }
