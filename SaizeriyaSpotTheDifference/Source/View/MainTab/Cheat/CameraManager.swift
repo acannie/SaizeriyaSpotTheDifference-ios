@@ -23,10 +23,11 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
     private func setupSession() {
         session.beginConfiguration()
 
-        // 入力（背面カメラ）
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-              let input = try? AVCaptureDeviceInput(device: camera)
-        else { return }
+        // 入力（背面カメラ、0.5倍ズーム）
+        guard let camera = AVCaptureDevice.default(.builtInUltraWideCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: camera) else {
+            return
+        }
 
         if session.canAddInput(input) { session.addInput(input) }
         if session.canAddOutput(output) { session.addOutput(output) }
