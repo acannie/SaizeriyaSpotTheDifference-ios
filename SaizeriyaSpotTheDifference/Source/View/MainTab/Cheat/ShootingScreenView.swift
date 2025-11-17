@@ -32,7 +32,7 @@ struct ShootingScreenView: View {
         }
         .onChange(of: camera.capturedImage) {
             if let image = camera.capturedImage {
-                self.navigationRouter.path.append(.confirm(image))
+                self.navigationRouter.path.append(.result(image))
             }
         }
         .onAppear {

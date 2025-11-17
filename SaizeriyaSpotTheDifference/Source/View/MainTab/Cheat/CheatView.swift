@@ -14,7 +14,7 @@ struct CheatView: View {
         NavigationStack(path: $navigationRouter.path) {
             ShootingScreenView()
                 .navigationDestination(
-                    for: CheatScreenNavigationRouter.ScreenKey.self,
+                    for: CheatScreenNavigationRouter.Key.self,
                     destination: { screenKey in
                         screenKey.destination()
                     }

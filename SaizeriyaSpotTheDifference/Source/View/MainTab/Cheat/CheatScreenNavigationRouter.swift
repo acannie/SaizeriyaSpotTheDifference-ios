@@ -9,22 +9,19 @@ import SwiftUI
 import Combine
 
 class CheatScreenNavigationRouter: ObservableObject {
-    @Published var path = [ScreenKey]()
+    @Published var path = [Key]()
 
-    enum ScreenKey: Hashable {
-        case camera
-        case confirm(UIImage)
-        case result
+    enum Key: Hashable {
+        case shooting
+        case result(UIImage)
 
         @ViewBuilder
         func destination() -> some View {
             switch self {
-            case .camera:
+            case .shooting:
                 ShootingScreenView()
-            case .confirm(let image):
-                EditImageView(image: image)
-            case .result:
-                Text("Result")
+            case .result(let image):
+                CheatResultScreenView(image: image)
             }
         }
     }
