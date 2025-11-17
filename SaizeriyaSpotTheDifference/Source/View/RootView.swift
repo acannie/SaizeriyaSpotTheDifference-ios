@@ -10,10 +10,10 @@ import SwiftUI
 struct RootView: View {
     @State private var selectedPage: Page = .start
     @State private var selectedTab: MainTab = .cheat
-    @State private var topBarText: String = "答え合わせの時間だ！"
+    @StateObject private var headerViewModel = HeaderViewModel()
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             topBar
             content
             bottomBar
@@ -23,14 +23,14 @@ struct RootView: View {
 
 private extension RootView {
     var topBar: some View {
-        Text(topBarText)
+        Text(headerViewModel.text)
             .font(.system(size: 20, weight: .bold))
             .foregroundStyle(.commonPrimary)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
             .background(.commonGreen)
             .transition(.opacity)
-            .animation(.bouncy, value: topBarText)
+            .animation(.bouncy, value: headerViewModel.text)
     }
 
     var content: some View {
@@ -39,10 +39,8 @@ private extension RootView {
             case .start:
                 StartView(selectedPage: $selectedPage)
             case .main:
-                MainView(
-                    topBarText: $topBarText,
-                    tab: selectedTab
-                )
+                MainView(tab: selectedTab)
+                    .environmentObject(headerViewModel)
             }
         }
         .frame(maxHeight: .infinity)
