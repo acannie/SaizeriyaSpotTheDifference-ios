@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ShootingScreenView: View {
     @EnvironmentObject private var headerViewModel: HeaderViewModel
-    @State private var image: UIImage?
+    @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -31,7 +31,7 @@ struct ShootingScreenView: View {
         }
         .onChange(of: camera.capturedImage) {
             if let image = camera.capturedImage {
-                self.image = image
+                self.navigationRouter.path.append(.confirm(image))
             }
         }
         .onAppear {

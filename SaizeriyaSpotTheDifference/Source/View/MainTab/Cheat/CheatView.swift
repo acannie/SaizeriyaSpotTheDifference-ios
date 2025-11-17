@@ -8,9 +8,18 @@
 import SwiftUI
 
 struct CheatView: View {
+    @StateObject private var navigationRouter = CheatScreenNavigationRouter()
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationRouter.path) {
             ShootingScreenView()
+                .navigationDestination(
+                    for: CheatScreenNavigationRouter.ScreenKey.self,
+                    destination: { screenKey in
+                        screenKey.destination()
+                    }
+                )
         }
+        .environmentObject(navigationRouter)
     }
 }
