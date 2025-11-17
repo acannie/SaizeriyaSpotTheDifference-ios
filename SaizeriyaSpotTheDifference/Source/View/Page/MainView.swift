@@ -8,18 +8,16 @@
 import SwiftUI
 
 struct MainView: View {
-    @Binding private var topBarText: String
     private let tab: MainTab
 
-    init(topBarText: Binding<String>, tab: MainTab) {
-        self._topBarText = topBarText
+    init(tab: MainTab) {
         self.tab = tab
     }
 
     var body: some View {
         switch tab {
         case .cheat:
-            CheatView(topBarText: $topBarText)
+            CheatView()
         case .collection:
             CollectionView()
         case .environmentSetting:

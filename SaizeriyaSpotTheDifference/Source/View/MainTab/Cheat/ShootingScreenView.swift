@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ShootingScreenView: View {
+    @EnvironmentObject private var headerViewModel: HeaderViewModel
     @State private var image: UIImage?
-    @Binding private var topBarText: String
     @StateObject private var camera = CameraManager()
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -17,10 +17,6 @@ struct ShootingScreenView: View {
         let width = UIScreen.main.bounds.width - horizontalPadding * 2
         let height = width / 2
         return .init(width: width, height: height)
-    }
-
-    init(topBarText: Binding<String>) {
-        self._topBarText = topBarText
     }
 
     var body: some View {
@@ -39,7 +35,7 @@ struct ShootingScreenView: View {
             }
         }
         .onAppear {
-            topBarText = "間違い探しを撮影しよう"
+            headerViewModel.updateText("間違い探しを撮影しよう")
         }
     }
 }
