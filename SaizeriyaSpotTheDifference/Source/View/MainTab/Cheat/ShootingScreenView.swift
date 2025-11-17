@@ -77,7 +77,7 @@ private extension ShootingScreenView {
             // 中央の線
             Rectangle()
                 .fill(.cameraGuideLine)
-                .frame(width: guideLineWidth, height: guideLineSize.height - guideLineWidth * 2)
+                .frame(width: guideLineWidth, height: guideLineSize.height - guideLineWidth)
         }
     }
 }
