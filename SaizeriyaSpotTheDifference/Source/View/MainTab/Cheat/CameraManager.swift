@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
-    @Published var capturedImage: UIImage?
+    @Published private(set) var capturedImage: UIImage?
 
     let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -32,25 +32,29 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         if session.canAddOutput(output) { session.addOutput(output) }
 
         session.commitConfiguration()
-        session.startRunning()
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.session.startRunning()
+        }
     }
 
-    // 撮影
+    /// 撮影
     func takePhoto() {
         let settings = AVCapturePhotoSettings()
         output.capturePhoto(with: settings, delegate: self)
     }
 
-    // 撮影コールバック
-    func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishProcessingPhoto photo: AVCapturePhoto,
-                     error: Error?)
-    {
+    /// 撮影コールバック
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
         guard let data = photo.fileDataRepresentation(),
-              let image = UIImage(data: data)
-        else { return }
+              let image = UIImage(data: data) else {
+            return
+        }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.capturedImage = image
         }
     }
