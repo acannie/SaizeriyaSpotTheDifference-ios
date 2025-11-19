@@ -59,6 +59,7 @@ struct CheatResultScreenView: View {
                 Image(uiImage: resultImage)
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(imageViewPadding)
             } else {
                 Rectangle()
                     .fill(.gray)
