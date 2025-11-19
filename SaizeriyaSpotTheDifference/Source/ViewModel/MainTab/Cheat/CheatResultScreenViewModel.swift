@@ -9,28 +9,40 @@ import SwiftUI
 import Combine
 
 final class CheatResultScreenViewModel: ObservableObject {
-    enum ImageType {
-        case single(UIImage)
-        case double(left: UIImage, right: UIImage)
-    }
-    @Published private(set) var imageType: ImageType
+    @Published private(set) var imageSuite: ImageSuite
     @Published private(set) var resultImage: UIImage?
+    private let createImageTasks: [CreateImageTaskExecutable] = [
+        DetectRectangleAndPerspectiveCorrectTask()
+    ]
+    @Published var showsErrorAlert: Bool = false
+    @Published private(set) var errorMessage: String?
 
     init(image: UIImage) {
-        self.imageType = .single(image)
+        self.imageSuite = .single(image)
     }
 
     func detectDifferences(updateHeaderText: @escaping (String) -> Void) async {
-        updateHeaderText("間違い探しを認識中……")
-        try? await Task.sleep(for: .seconds(1))
-        updateHeaderText("イラストを認識中……")
-        try? await Task.sleep(for: .seconds(1))
-        updateHeaderText("間違いを検出中……")
-        try? await Task.sleep(for: .seconds(1))
-        updateHeaderText("間違い検出完了！")
+        for task in createImageTasks {
+            updateHeaderText(task.headerText)
+            do {
+                let imageSuite = try await task.createImage(from: imageSuite)
+                self.imageSuite = imageSuite
+            } catch {
+                showAlert(message: error.localizedDescription)
+            }
+        }
+        switch imageSuite {
+        case .single:
+            print("処理を最後まで完了できませんでした")
+        case .double(let left, let right):
+            resultImage = left
+        }
     }
 }
 
-private extension CheatResultScreenView {
-    
+private extension CheatResultScreenViewModel {
+    func showAlert(message: String) {
+        self.errorMessage = message
+        self.showsErrorAlert = true
+    }
 }

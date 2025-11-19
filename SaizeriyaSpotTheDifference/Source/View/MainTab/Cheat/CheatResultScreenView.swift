@@ -29,7 +29,7 @@ struct CheatResultScreenView: View {
 
     var body: some View {
         VStack {
-            switch viewModel.imageType {
+            switch viewModel.imageSuite {
             case .single(let image):
                 Image(uiImage: image)
                     .resizable()
