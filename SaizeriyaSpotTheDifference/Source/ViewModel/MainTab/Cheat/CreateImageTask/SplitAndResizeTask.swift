@@ -8,7 +8,7 @@
 struct SplitAndResizeTask: CreateImageTaskExecutable {
     let headerText: String = "2枚の絵に分割中……"
 
-    func createImage(from imageSuite: ImageSuite) async throws -> ImageSuite {
+    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         try? await Task.sleep(for: .seconds(1))
 
         switch imageSuite {

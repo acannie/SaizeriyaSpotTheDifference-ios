@@ -30,7 +30,7 @@ final class CheatResultScreenViewModel: ObservableObject {
         for task in createImageTasks {
             updateHeaderText(task.headerText)
             do {
-                let imageSuite = try await task.createImage(from: imageSuite)
+                let imageSuite = try await task.createImageSuite(from: imageSuite)
                 self.imageSuite = imageSuite
             } catch {
                 showAlert(message: error.localizedDescription)
