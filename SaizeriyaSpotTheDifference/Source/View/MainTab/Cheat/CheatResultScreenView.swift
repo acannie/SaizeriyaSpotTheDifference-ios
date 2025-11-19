@@ -32,51 +32,66 @@ struct CheatResultScreenView: View {
         VStack {
             switch viewModel.imageSuite {
             case .single(let image):
-                Image(uiImage: image)
-                    .resizable()
-                    .frame(
-                        maxWidth: singleImageSuiteAreaSize.width,
-                        maxHeight: singleImageSuiteAreaSize.height
-                    )
-                    .padding(.vertical, imageViewPadding)
+                singleImageSuite(image)
             case .double(let leftImage, let rightImage):
-                HStack(spacing: doubleImageSuiteSpacing) {
-                    Image(uiImage: leftImage)
-                        .resizable()
-                        .frame(
-                            maxWidth: doubleImageSuiteAreaSize.width,
-                            maxHeight: doubleImageSuiteAreaSize.height
-                        )
-                    Image(uiImage: rightImage)
-                        .resizable()
-                        .frame(
-                            maxWidth: doubleImageSuiteAreaSize.width,
-                            maxHeight: doubleImageSuiteAreaSize.height
-                        )
-                }
-                .padding(.vertical, imageViewPadding)
-                .onAppear {
-                    doubleImageSuiteSpacing = imageViewPadding
-                }
-                .animation(.easeInOut(duration: 0.3), value: doubleImageSuiteSpacing)
+                doubleImageSuite(left: leftImage, right: rightImage)
             }
-            if let resultImage = viewModel.resultImage {
-                Image(uiImage: resultImage)
-                    .resizable()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(imageViewPadding)
-            } else {
-                Rectangle()
-                    .fill(.gray)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(imageViewPadding)
-            }
+            result
         }
         .navigationBarBackButtonHidden(true)
         .task {
             await viewModel.detectDifferences() { str in
                 headerViewModel.updateText(str)
             }
+        }
+    }
+}
+
+private extension CheatResultScreenView {
+    func singleImageSuite(_ image: UIImage) -> some View {
+        Image(uiImage: image)
+            .resizable()
+            .frame(
+                maxWidth: singleImageSuiteAreaSize.width,
+                maxHeight: singleImageSuiteAreaSize.height
+            )
+            .padding(.vertical, imageViewPadding)
+    }
+
+    func doubleImageSuite(left leftImage: UIImage, right rightImage: UIImage) -> some View {
+        HStack(spacing: doubleImageSuiteSpacing) {
+            Image(uiImage: leftImage)
+                .resizable()
+                .frame(
+                    maxWidth: doubleImageSuiteAreaSize.width,
+                    maxHeight: doubleImageSuiteAreaSize.height
+                )
+            Image(uiImage: rightImage)
+                .resizable()
+                .frame(
+                    maxWidth: doubleImageSuiteAreaSize.width,
+                    maxHeight: doubleImageSuiteAreaSize.height
+                )
+        }
+        .padding(.vertical, imageViewPadding)
+        .onAppear {
+            doubleImageSuiteSpacing = imageViewPadding
+        }
+        .animation(.easeInOut(duration: 0.3), value: doubleImageSuiteSpacing)
+    }
+
+    @ViewBuilder
+    var result: some View {
+        if let resultImage = viewModel.resultImage {
+            Image(uiImage: resultImage)
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(imageViewPadding)
+        } else {
+            Rectangle()
+                .fill(.gray)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(imageViewPadding)
         }
     }
 }
