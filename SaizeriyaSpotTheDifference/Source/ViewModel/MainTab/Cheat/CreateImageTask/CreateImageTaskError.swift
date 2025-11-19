@@ -6,12 +6,15 @@
 //
 
 enum CreateImageTaskError: Error {
-    case couldnotDetectBook
+    case couldnotDetectMenuBook
+    case unexpectedError
 
     var localizedDescription: String {
         switch self {
-        case .couldnotDetectBook:
+        case .couldnotDetectMenuBook:
             "間違い探しを検出できませんでした"
+        case .unexpectedError:
+            "予期せぬエラーが発生しました"
         }
     }
 }
