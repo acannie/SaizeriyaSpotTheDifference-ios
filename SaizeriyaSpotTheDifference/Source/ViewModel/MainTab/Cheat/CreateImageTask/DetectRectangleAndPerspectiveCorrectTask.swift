@@ -27,11 +27,7 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
                     return
                 }
 
-                let ciImage = CIImage(
-                    cgImage: cgImage,
-                    options: [.applyOrientationProperty: true]
-                )
-                .oriented(forExifOrientation: Int32(uiImage.imageOrientation.rawValue))
+                let ciImage = CIImage(cgImage: cgImage)
                 let size = CGSize(width: ciImage.extent.width, height: ciImage.extent.height)
 
                 let filter = CIFilter.perspectiveCorrection()
@@ -52,7 +48,8 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
                     return
                 }
 
-                continuation.resume(returning: UIImage(cgImage: outCG))
+                let resultImage = UIImage(cgImage: outCG, scale: uiImage.scale, orientation: uiImage.imageOrientation)
+                continuation.resume(returning: resultImage)
             }
 
             request.minimumConfidence = 0.7
