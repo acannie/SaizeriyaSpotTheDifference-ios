@@ -9,37 +9,71 @@ import UIKit
 import AVFoundation
 
 struct ClipImageTask: CreateImageTaskExecutable {
+    let layoutHeight: LayoutHeight
+    let cameraPreviewFooterHeight: CGFloat
     var headerText: String = "撮影範囲を計算中……"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-//        guard case .single(let uiImage) = imageSuite else {
-//            throw CreateImageTaskError.unexpectedError
-//        }
-//
-//        let previewLayer: AVCaptureVideoPreviewLayer = camera.previewLayer
-//        let image: UIImage
-//
-//        let metadata = previewLayer.metadataOutputRectConverted(fromLayerRect: previewLayer.bounds)
-//
-//
-//
-//        let cropped = cropImage(uiImage, with: metadata)
+        try? await Task.sleep(for: .seconds(1.0))
 
-        return imageSuite
+        guard case .single(let image) = imageSuite else {
+            throw CreateImageTaskError.unexpectedError
+        }
+
+        // プレビューと画像のサイズ比率
+        let scale = image.size.width / UIScreen.main.bounds.width
+
+        // x座標は0
+        let originX: CGFloat = 0
+
+        // y座標を計算
+        let headerHeight = layoutHeight.headerHeight
+        let contentHeight = layoutHeight.contentHeight
+        let cameraPreviewHeight = contentHeight - cameraPreviewFooterHeight
+        let originY = headerHeight
+
+        // トリミング開始地点
+        let cropRect = CGRect(
+            x: originX * scale,
+            y: originY * scale,
+            width: UIScreen.main.bounds.width * scale,
+            height: cameraPreviewHeight * scale
+        )
+
+        guard let croppedImage = image.cropping(to: cropRect) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+        return .single(croppedImage)
     }
 }
 
-private extension ClipImageTask {
-    func cropImage(_ image: UIImage, with rect: CGRect) -> UIImage {
-        let width = image.size.width * rect.width
-        let height = image.size.height * rect.height
-        let x = image.size.width * rect.origin.x
-        let y = image.size.height * rect.origin.y
-        let croppingRect = CGRect(x: x, y: y, width: width, height: height)
-
-        guard let cgImage = image.cgImage?.cropping(to: croppingRect) else {
-            return image
+extension UIImage.Orientation {
+    /// 画像が横向きであるか
+    var isLandscape: Bool {
+        switch self {
+        case .up, .down, .upMirrored, .downMirrored:
+            false
+        case .left, .right, .leftMirrored, .rightMirrored:
+            true
+        @unknown default:
+            false
         }
-        return UIImage(cgImage: cgImage)
+    }
+}
+
+extension CGRect {
+    /// 反転させたサイズを返す
+    var switched: CGRect {
+        .init(x: minY, y: minX, width: height, height: width)
+    }
+}
+
+extension UIImage {
+    func cropping(to rect: CGRect) -> UIImage? {
+        let croppingRect: CGRect = imageOrientation.isLandscape ? rect.switched : rect
+        guard let cgImage: CGImage = self.cgImage?.cropping(to: croppingRect) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage, scale: scale, orientation: imageOrientation)
     }
 }

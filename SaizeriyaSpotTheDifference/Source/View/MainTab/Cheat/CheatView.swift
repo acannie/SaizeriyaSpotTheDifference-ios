@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CheatView: View {
+    @Environment(\.layoutHeight) private var layoutHeight
     @StateObject private var navigationRouter = CheatScreenNavigationRouter()
 
     var body: some View {
@@ -16,7 +17,7 @@ struct CheatView: View {
                 .navigationDestination(
                     for: CheatScreenNavigationRouter.Key.self,
                     destination: { screenKey in
-                        screenKey.destination()
+                        screenKey.destination(layoutHeight: layoutHeight)
                     }
                 )
         }

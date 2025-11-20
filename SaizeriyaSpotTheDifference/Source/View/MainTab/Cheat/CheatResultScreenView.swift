@@ -24,8 +24,12 @@ struct CheatResultScreenView: View {
         return .init(width: sideLength, height: sideLength)
     }
 
-    init(image: UIImage) {
-        viewModel = .init(image: image)
+    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
+        viewModel = .init(
+            image: image,
+            layoutHeight: layoutHeight,
+            cameraPreviewFooterHeight: cameraPreviewFooterHeight
+        )
     }
 
     var body: some View {
