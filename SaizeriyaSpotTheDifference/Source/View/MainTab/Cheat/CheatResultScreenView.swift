@@ -44,6 +44,13 @@ struct CheatResultScreenView: View {
                 headerViewModel.updateText(str)
             }
         }
+        .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
+            Button("OK") {
+                navigationRouter.path.removeLast()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
 

@@ -32,8 +32,11 @@ final class CheatResultScreenViewModel: ObservableObject {
             do {
                 let imageSuite = try await task.createImageSuite(from: imageSuite)
                 self.imageSuite = imageSuite
+            } catch let error as CreateImageTaskError {
+                showAlert(message: error.description)
+                return
             } catch {
-                showAlert(message: error.localizedDescription)
+                showAlert(message: "予期せぬエラーが発生しました")
                 return
             }
         }
