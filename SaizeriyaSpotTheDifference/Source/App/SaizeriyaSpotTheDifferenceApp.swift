@@ -25,7 +25,7 @@ struct SaizeriyaSpotTheDifferenceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ForResearchView()
         }
         .modelContainer(sharedModelContainer)
     }
