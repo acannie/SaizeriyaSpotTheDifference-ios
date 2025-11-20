@@ -58,6 +58,7 @@ private extension CheatResultScreenView {
     func singleImageSuite(_ image: UIImage) -> some View {
         Image(uiImage: image)
             .resizable()
+            .scaledToFit()
             .frame(
                 maxWidth: singleImageSuiteAreaSize.width,
                 maxHeight: singleImageSuiteAreaSize.height
@@ -69,12 +70,14 @@ private extension CheatResultScreenView {
         HStack(spacing: doubleImageSuiteSpacing) {
             Image(uiImage: leftImage)
                 .resizable()
+                .scaledToFit()
                 .frame(
                     maxWidth: doubleImageSuiteAreaSize.width,
                     maxHeight: doubleImageSuiteAreaSize.height
                 )
             Image(uiImage: rightImage)
                 .resizable()
+                .scaledToFit()
                 .frame(
                     maxWidth: doubleImageSuiteAreaSize.width,
                     maxHeight: doubleImageSuiteAreaSize.height
