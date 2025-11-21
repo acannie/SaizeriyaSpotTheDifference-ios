@@ -23,6 +23,16 @@ struct ClipImageTask: CreateImageTaskExecutable {
         // プレビューと画像のサイズ比率
         let scale = image.size.width / UIScreen.main.bounds.width
 
+        guard let previewedImage = getPreviewedImage(from: image, scale: scale) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+
+        return .single(previewedImage)
+    }
+}
+
+private extension ClipImageTask {
+    func getPreviewedImage(from image: UIImage, scale: CGFloat) -> UIImage? {
         // x座標は0
         let originX: CGFloat = 0
 
@@ -40,9 +50,6 @@ struct ClipImageTask: CreateImageTaskExecutable {
             height: cameraPreviewHeight * scale
         )
 
-        guard let croppedImage = image.cropping(to: cropRect) else {
-            throw CreateImageTaskError.unexpectedError
-        }
-        return .single(croppedImage)
+        return image.cropping(to: cropRect)
     }
 }
