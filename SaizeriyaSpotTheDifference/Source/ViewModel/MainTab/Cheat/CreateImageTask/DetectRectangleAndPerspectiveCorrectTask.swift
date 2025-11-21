@@ -32,10 +32,10 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
 
                 let filter = CIFilter.perspectiveCorrection()
                 filter.inputImage = ciImage
-                filter.topLeft = toImagePoint(obs.topLeft, size: size)
-                filter.topRight = toImagePoint(obs.topRight, size: size)
-                filter.bottomLeft = toImagePoint(obs.bottomLeft, size: size)
-                filter.bottomRight = toImagePoint(obs.bottomRight, size: size)
+                filter.topLeft = obs.topLeft.toImagePoint(size: size)
+                filter.topRight = obs.topRight.toImagePoint(size: size)
+                filter.bottomLeft = obs.bottomLeft.toImagePoint(size: size)
+                filter.bottomRight = obs.bottomRight.toImagePoint(size: size)
 
                 let context = CIContext()
                 guard let outputCI = filter.outputImage else {
@@ -65,29 +65,5 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
             throw CreateImageTaskError.couldnotDetectMenuBook
         }
         return .single(resultImage)
-    }
-}
-
-private extension DetectRectangleAndPerspectiveCorrectTask {
-    func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
-        return hypot(a.x - b.x, a.y - b.y)
-    }
-
-    func cgImagePropertyOrientation(from uiOrientation: UIImage.Orientation) -> CGImagePropertyOrientation {
-        switch uiOrientation {
-        case .up: .up
-        case .down: .down
-        case .left: .left
-        case .right: .right
-        case .upMirrored: .upMirrored
-        case .downMirrored: .downMirrored
-        case .leftMirrored: .leftMirrored
-        case .rightMirrored: .rightMirrored
-        @unknown default: .up
-        }
-    }
-
-    func toImagePoint(_ p: CGPoint, size: CGSize) -> CGPoint {
-        .init(x: p.x * size.width, y: p.y * size.height)
     }
 }

@@ -46,34 +46,3 @@ struct ClipImageTask: CreateImageTaskExecutable {
         return .single(croppedImage)
     }
 }
-
-extension UIImage.Orientation {
-    /// 画像が横向きであるか
-    var isLandscape: Bool {
-        switch self {
-        case .up, .down, .upMirrored, .downMirrored:
-            false
-        case .left, .right, .leftMirrored, .rightMirrored:
-            true
-        @unknown default:
-            false
-        }
-    }
-}
-
-extension CGRect {
-    /// 反転させたサイズを返す
-    var switched: CGRect {
-        .init(x: minY, y: minX, width: height, height: width)
-    }
-}
-
-extension UIImage {
-    func cropping(to rect: CGRect) -> UIImage? {
-        let croppingRect: CGRect = imageOrientation.isLandscape ? rect.switched : rect
-        guard let cgImage: CGImage = self.cgImage?.cropping(to: croppingRect) else {
-            return nil
-        }
-        return UIImage(cgImage: cgImage, scale: scale, orientation: imageOrientation)
-    }
-}
