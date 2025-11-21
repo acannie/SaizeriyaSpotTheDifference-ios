@@ -48,7 +48,11 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
                     return
                 }
 
-                let resultImage = UIImage(cgImage: outCG, scale: uiImage.scale, orientation: uiImage.imageOrientation)
+                let resultImage = UIImage(
+                    cgImage: outCG,
+                    scale: uiImage.scale,
+                    orientation: uiImage.imageOrientation
+                )
                 continuation.resume(returning: resultImage)
             }
 

@@ -58,7 +58,7 @@ private extension ShootingScreenView {
         .frame(maxWidth: .infinity)
         .background(.cameraBackground)
     }
-    
+
     var shootingButton: some View {
         Button(
             action: {
@@ -78,7 +78,7 @@ private extension ShootingScreenView {
         }
         .disabled(!enableShootingButton)
     }
-    
+
     var guideLine: some View {
         ZStack {
             // 枠
