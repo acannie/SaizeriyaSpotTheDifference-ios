@@ -49,7 +49,7 @@ struct CheatResultScreenView: View {
             }
         }
         .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
-            Button("OK") {
+            Button("再撮影") {
                 navigationRouter.path.removeLast()
             }
         } message: {
