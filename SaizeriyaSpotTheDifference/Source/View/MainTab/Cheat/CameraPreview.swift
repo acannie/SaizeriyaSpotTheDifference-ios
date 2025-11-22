@@ -10,13 +10,8 @@ import AVFoundation
 
 struct CameraPreview: UIViewRepresentable {
     class VideoPreviewView: UIView {
-        override class var layerClass: AnyClass {
-            AVCaptureVideoPreviewLayer.self
-        }
-
-        var videoPreviewLayer: AVCaptureVideoPreviewLayer {
-            layer as! AVCaptureVideoPreviewLayer
-        }
+        override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+        var videoPreviewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
     }
 
     private let session: AVCaptureSession
@@ -32,5 +27,7 @@ struct CameraPreview: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ uiView: VideoPreviewView, context: Context) {}
+    func updateUIView(_ uiView: VideoPreviewView, context: Context) {
+        uiView.videoPreviewLayer.frame = uiView.bounds
+    }
 }
