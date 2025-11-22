@@ -20,7 +20,7 @@ final class CheatResultScreenViewModel: ObservableObject {
         self.createImageTasks = [
             ClipImageTask(layoutHeight: layoutHeight, cameraPreviewFooterHeight: cameraPreviewFooterHeight),
             DetectRectangleAndPerspectiveCorrectTask(),
-    //        SplitAndResizeTask(),
+            SplitAndResizeTask(),
     //        TakeEffectsTask(),
     //        ColorClusteringTask(),
     //        CoordinateClusteringTask(),
