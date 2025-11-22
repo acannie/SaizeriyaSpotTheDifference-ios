@@ -17,23 +17,28 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
 
     override init() {
         super.init()
-        setupSession()
+        configureSessionAsync()
     }
 
-    private func setupSession() {
-        session.beginConfiguration()
+    private func configureSessionAsync() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
 
-        // 入力（背面カメラ、0.5倍ズーム）
-        guard let camera = AVCaptureDevice.default(.builtInUltraWideCamera, for: .video, position: .back),
-              let input = try? AVCaptureDeviceInput(device: camera) else {
-            return
-        }
+            self.session.beginConfiguration()
 
-        if session.canAddInput(input) { session.addInput(input) }
-        if session.canAddOutput(output) { session.addOutput(output) }
+            // 入力デバイス
+            if let camera = AVCaptureDevice.default(.builtInUltraWideCamera, for: .video, position: .back),
+               let input = try? AVCaptureDeviceInput(device: camera),
+               self.session.canAddInput(input) {
+                self.session.addInput(input)
+            }
 
-        session.commitConfiguration()
-        DispatchQueue.global(qos: .userInitiated).async {
+            // 出力デバイス
+            if self.session.canAddOutput(self.output) {
+                self.session.addOutput(self.output)
+            }
+
+            self.session.commitConfiguration()
             self.session.startRunning()
         }
     }
