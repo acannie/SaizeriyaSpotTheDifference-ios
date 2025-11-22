@@ -44,6 +44,7 @@ struct ShootingScreenView: View {
             }
         }
         .onAppear {
+            enableShootingButton = true
             headerViewModel.updateText("間違い探しを撮影しよう")
         }
     }
