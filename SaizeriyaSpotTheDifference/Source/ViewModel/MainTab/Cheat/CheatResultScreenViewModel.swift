@@ -11,19 +11,21 @@ import Combine
 final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var imageSuite: ImageSuite
     @Published private(set) var resultImage: UIImage?
-    private let createImageTasks: [CreateImageTaskExecutable] = [
-        DetectRectangleAndPerspectiveCorrectTask(),
-        SplitAndResizeTask(),
-        TakeEffectsTask(),
-        ColorClusteringTask(),
-        CoordinateClusteringTask(),
-        DifferingPixelCoordinatesTask()
-    ]
+    private let createImageTasks: [CreateImageTaskExecutable]
     @Published var showsErrorAlert: Bool = false
     @Published private(set) var errorMessage: String?
 
-    init(image: UIImage) {
+    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
         self.imageSuite = .single(image)
+        self.createImageTasks = [
+            ClipImageTask(layoutHeight: layoutHeight, cameraPreviewFooterHeight: cameraPreviewFooterHeight),
+            DetectRectangleAndPerspectiveCorrectTask(),
+    //        SplitAndResizeTask(),
+    //        TakeEffectsTask(),
+    //        ColorClusteringTask(),
+    //        CoordinateClusteringTask(),
+    //        DifferingPixelCoordinatesTask()
+        ]
     }
 
     func detectDifferences(updateHeaderText: @escaping (String) -> Void) async {
@@ -32,8 +34,11 @@ final class CheatResultScreenViewModel: ObservableObject {
             do {
                 let imageSuite = try await task.createImageSuite(from: imageSuite)
                 self.imageSuite = imageSuite
+            } catch let error as CreateImageTaskError {
+                showAlert(message: error.description)
+                return
             } catch {
-                showAlert(message: error.localizedDescription)
+                showAlert(message: "予期せぬエラーが発生しました")
                 return
             }
         }

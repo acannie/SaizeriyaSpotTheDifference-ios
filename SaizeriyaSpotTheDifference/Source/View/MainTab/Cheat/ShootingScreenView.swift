@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct ShootingScreenView: View {
+    @Environment(\.layoutHeight) private var layoutHeight
     @EnvironmentObject private var headerViewModel: HeaderViewModel
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     @State private var enableShootingButton: Bool = true
+    private let footerHeight: CGFloat = 130
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
         let horizontalPadding: CGFloat = 10
@@ -32,7 +35,12 @@ struct ShootingScreenView: View {
         }
         .onChange(of: camera.capturedImage) {
             if let image = camera.capturedImage {
-                self.navigationRouter.path.append(.result(image))
+                self.navigationRouter.path.append(
+                    .result(
+                        image,
+                        cameraPreviewFooterHeight: footerHeight
+                    )
+                )
             }
         }
         .onAppear {
@@ -46,7 +54,7 @@ private extension ShootingScreenView {
         HStack {
             shootingButton
         }
-        .frame(height: 130)
+        .frame(height: footerHeight)
         .frame(maxWidth: .infinity)
         .background(.cameraBackground)
     }

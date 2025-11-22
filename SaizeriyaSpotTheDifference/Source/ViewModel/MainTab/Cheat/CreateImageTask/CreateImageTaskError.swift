@@ -9,7 +9,7 @@ enum CreateImageTaskError: Error {
     case couldnotDetectMenuBook
     case unexpectedError
 
-    var localizedDescription: String {
+    var description: String {
         switch self {
         case .couldnotDetectMenuBook:
             "間違い探しを検出できませんでした"

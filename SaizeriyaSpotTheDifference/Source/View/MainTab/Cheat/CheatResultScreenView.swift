@@ -24,8 +24,12 @@ struct CheatResultScreenView: View {
         return .init(width: sideLength, height: sideLength)
     }
 
-    init(image: UIImage) {
-        viewModel = .init(image: image)
+    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
+        viewModel = .init(
+            image: image,
+            layoutHeight: layoutHeight,
+            cameraPreviewFooterHeight: cameraPreviewFooterHeight
+        )
     }
 
     var body: some View {
@@ -44,6 +48,13 @@ struct CheatResultScreenView: View {
                 headerViewModel.updateText(str)
             }
         }
+        .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
+            Button("OK") {
+                navigationRouter.path.removeLast()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
 
@@ -51,6 +62,7 @@ private extension CheatResultScreenView {
     func singleImageSuite(_ image: UIImage) -> some View {
         Image(uiImage: image)
             .resizable()
+            .scaledToFit()
             .frame(
                 maxWidth: singleImageSuiteAreaSize.width,
                 maxHeight: singleImageSuiteAreaSize.height
@@ -62,12 +74,14 @@ private extension CheatResultScreenView {
         HStack(spacing: doubleImageSuiteSpacing) {
             Image(uiImage: leftImage)
                 .resizable()
+                .scaledToFit()
                 .frame(
                     maxWidth: doubleImageSuiteAreaSize.width,
                     maxHeight: doubleImageSuiteAreaSize.height
                 )
             Image(uiImage: rightImage)
                 .resizable()
+                .scaledToFit()
                 .frame(
                     maxWidth: doubleImageSuiteAreaSize.width,
                     maxHeight: doubleImageSuiteAreaSize.height
