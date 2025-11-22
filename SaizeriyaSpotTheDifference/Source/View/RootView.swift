@@ -44,8 +44,6 @@ private extension RootView {
             .frame(height: headerHeight)
             .frame(maxWidth: .infinity)
             .background(.commonGreen)
-            .transition(.opacity)
-            .animation(.bouncy, value: headerViewModel.text)
     }
 
     var content: some View {

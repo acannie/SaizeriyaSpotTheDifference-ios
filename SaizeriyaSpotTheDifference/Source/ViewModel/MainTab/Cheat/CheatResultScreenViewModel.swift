@@ -32,7 +32,9 @@ final class CheatResultScreenViewModel: ObservableObject {
         for task in createImageTasks {
             updateHeaderText(task.headerText)
             do {
-                let imageSuite = try await task.createImageSuite(from: imageSuite)
+                let imageSuite = try await Task.detached {
+                    try await task.createImageSuite(from: self.imageSuite)
+                }.value
                 self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
                 showAlert(message: error.description)
