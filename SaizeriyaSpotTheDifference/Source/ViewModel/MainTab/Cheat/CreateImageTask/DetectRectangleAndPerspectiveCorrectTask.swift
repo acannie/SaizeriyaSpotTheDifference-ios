@@ -69,7 +69,7 @@ private extension CGImage {
                 continuation.resume(returning: rect)
             }
 
-            request.minimumConfidence = 0.5
+            request.minimumConfidence = 0.7
             request.maximumObservations = 1
 
             let handler = VNImageRequestHandler(cgImage: self, options: [:])
