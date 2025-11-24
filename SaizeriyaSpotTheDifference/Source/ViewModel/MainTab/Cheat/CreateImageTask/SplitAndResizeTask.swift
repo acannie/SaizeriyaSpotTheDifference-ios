@@ -45,39 +45,50 @@ private extension UIImage {
     }
 
     func removeBorder(
-        thickness: Int = 3,
+        thickness: Int = 5,
         step: Int = 10,
-        tolerance: CGFloat = 0.1
-    ) -> UIImage? {
-        guard let cg = self.cgImage else { return nil }
+        tolerance: CGFloat = 0.3
+    ) async throws -> UIImage {
+        guard let cg = self.cgImage else {
+            throw CreateImageTaskError.unexpectedError
+        }
 
         let w = cg.width
         let h = cg.height
 
         guard let data = cg.dataProvider?.data,
-              let ptr = CFDataGetBytePtr(data) else { return nil }
+              let ptr = CFDataGetBytePtr(data) else {
+            throw CreateImageTaskError.unexpectedError
+        }
 
-        func pixel(_ x: Int, _ y: Int) -> (CGFloat, CGFloat, CGFloat) {
+        func pixel(_ x: Int, _ y: Int) -> Rgb {
             let i = (y * w + x) * 4
-            return (
-                CGFloat(ptr[i]) / 255,
-                CGFloat(ptr[i+1]) / 255,
-                CGFloat(ptr[i+2]) / 255
+            return .init(
+                r: CGFloat(ptr[i]) / 255,
+                g: CGFloat(ptr[i+1]) / 255,
+                b: CGFloat(ptr[i+2]) / 255
             )
         }
 
         // ---- Step 1: 各辺ごとに平均色を取得 ----
-
-        func averageColor(_ samples: [(CGFloat, CGFloat, CGFloat)]) -> (CGFloat,CGFloat,CGFloat) {
-            let cnt = CGFloat(samples.count)
-            let (r,g,b) = samples.reduce((0.0,0.0,0.0)) { acc, p in
-                (acc.0 + p.0, acc.1 + p.1, acc.2 + p.2)
+        func averageColor(_ samples: [Rgb]) -> Rgb {
+            let count = CGFloat(samples.count)
+            let total = samples.reduce(Rgb(r: 0, g: 0, b: 0)) { acc, p in
+                Rgb(
+                    r: acc.r + p.r,
+                    g: acc.g + p.g,
+                    b: acc.b + p.b
+                )
             }
-            return (r/cnt, g/cnt, b/cnt)
+            return Rgb(
+                r: total.r / count,
+                g: total.g / count,
+                b: total.b / count
+            )
         }
 
         // 上
-        var topSamples: [(CGFloat,CGFloat,CGFloat)] = []
+        var topSamples: [Rgb] = []
         for y in 0..<thickness {
             for x in stride(from: 0, to: w, by: step) {
                 topSamples.append(pixel(x, y))
@@ -85,7 +96,7 @@ private extension UIImage {
         }
 
         // 下
-        var bottomSamples: [(CGFloat,CGFloat,CGFloat)] = []
+        var bottomSamples: [Rgb] = []
         for y in (h - thickness)..<h {
             for x in stride(from: 0, to: w, by: step) {
                 bottomSamples.append(pixel(x, y))
@@ -93,7 +104,7 @@ private extension UIImage {
         }
 
         // 左
-        var leftSamples: [(CGFloat,CGFloat,CGFloat)] = []
+        var leftSamples: [Rgb] = []
         for x in 0..<thickness {
             for y in stride(from: 0, to: h, by: step) {
                 leftSamples.append(pixel(x, y))
@@ -101,7 +112,7 @@ private extension UIImage {
         }
 
         // 右
-        var rightSamples: [(CGFloat,CGFloat,CGFloat)] = []
+        var rightSamples: [Rgb] = []
         for x in (w - thickness)..<w {
             for y in stride(from: 0, to: h, by: step) {
                 rightSamples.append(pixel(x, y))
@@ -113,11 +124,11 @@ private extension UIImage {
         let leftColor = averageColor(leftSamples)
         let rightColor = averageColor(rightSamples)
 
-        func isNear(_ p: (CGFloat,CGFloat,CGFloat),
-                    _ base: (CGFloat,CGFloat,CGFloat)) -> Bool {
-            let dr = abs(p.0 - base.0)
-            let dg = abs(p.1 - base.1)
-            let db = abs(p.2 - base.2)
+        func isNear(_ p: Rgb,
+                    _ base: Rgb) -> Bool {
+            let dr = abs(p.r - base.r)
+            let dg = abs(p.g - base.g)
+            let db = abs(p.b - base.b)
             return (dr + dg + db) < tolerance
         }
 
@@ -164,7 +175,9 @@ private extension UIImage {
             height: max(bottom - top + 1, 1)
         )
 
-        guard let cropped = cg.cropping(to: rect) else { return nil }
+        guard let cropped = cg.cropping(to: rect) else {
+            throw CreateImageTaskError.unexpectedError
+        }
         return UIImage(cgImage: cropped)
     }
 }
