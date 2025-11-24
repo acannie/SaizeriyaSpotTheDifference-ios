@@ -43,9 +43,11 @@ struct CheatResultScreenView: View {
             result
         }
         .navigationBarBackButtonHidden(true)
-        .task {
-            await viewModel.detectDifferences() { str in
-                headerViewModel.updateText(str)
+        .onAppear {
+            Task {
+                await viewModel.detectDifferences() { str in
+                    headerViewModel.updateText(str)
+                }
             }
         }
         .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
