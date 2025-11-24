@@ -81,13 +81,6 @@ private extension CGImage {
 }
 
 private extension CIImage {
-    func createCgImage(with context: CIContext) throws -> CGImage {
-        guard let cgImage = context.createCGImage(self, from: self.extent) else {
-            throw CreateImageTaskError.unexpectedError
-        }
-        return cgImage
-    }
-
     /// エッジを強調
     func emphasizeEdge() -> CIImage {
         // エッジ抽出
