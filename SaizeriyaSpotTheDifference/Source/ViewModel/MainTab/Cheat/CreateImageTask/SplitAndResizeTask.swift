@@ -15,15 +15,14 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
             throw CreateImageTaskError.unexpectedError
         }
 
-        // メニューブックを左右に分割
+        // 枠を切り落とし
         let normalizedImage = image.normalized
-        let splitImage = try normalizedImage.splitImage()
+        let borderRemovedImage = try await normalizedImage.removeBorder()
 
-        // もっとも左右の相似度が高いオフセットを特定
-        let borderRemovedImageLeft = splitImage.left.removeBorder() ?? splitImage.left
-        let borderRemovedImageRight = splitImage.right.removeBorder() ?? splitImage.right
+        // 左右に分割
+        let splitImage = try borderRemovedImage.splitImage()
 
-        return .double(left: borderRemovedImageLeft, right: borderRemovedImageRight)
+        return .double(left: splitImage.left, right: splitImage.right)
     }
 }
 
