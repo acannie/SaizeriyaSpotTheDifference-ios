@@ -18,13 +18,17 @@ struct PosterizeTask: CreateImageTaskExecutable {
 
         // 画像の形式変換
         let context = CIContext()
-        let ciImage = CIImage(cgImage: cgImage)
+        var ciImage = CIImage(cgImage: cgImage)
 
         // ポスタライズ処理
-        let posterizedCiImage = await ciImage.posterize()
+        ciImage = try await ciImage.posterize()
+        ciImage = try await ciImage.median()
+        ciImage = try await ciImage.noseReduction()
+        let palette = try await ciImage.kMeans()
+        ciImage = try await ciImage.palettize(paletteImage: palette.settingAlphaOne(in: palette.extent))
 
         // 返却値の作成
-        let resultCgImage = try posterizedCiImage.createCgImage(with: context)
+        let resultCgImage = try ciImage.createCgImage(with: context)
         let resultImage = UIImage(
             cgImage: resultCgImage,
             scale: uiImage.scale,
@@ -36,50 +40,65 @@ struct PosterizeTask: CreateImageTaskExecutable {
 }
 
 private extension CIImage {
-    /// 四角形補正済みの写真から、元イラストに近い塗り分けを抽出する
-    /// - Parameters:
-    ///   - image: 入力 UIImage（四角形補正済み）
-    ///   - medianRadius: Median フィルタの強さ（ノイズ吸収）
-    ///   - blurRadius: BoxBlur の半径（アンチエイリアス吸収）
-    ///   - posterizeLevels: Posterize の階調数（少なめで1色化を強める）
-    /// - Returns: 処理後 UIImage
-    func posterize(
-       medianRadius: Double = 1.0,
-       blurRadius: Double = 1.0,
-       posterizeLevels: Float = 4.0
-    ) async -> CIImage {
-        let context = CIContext()
-        var ciImage = self
+    /// 明るさ・コントラスト調整
+    func colorControls() async throws -> CIImage {
+        let colorControlsFilter = CIFilter.colorControls()
+        colorControlsFilter.inputImage = self
+        colorControlsFilter.brightness = 0.1
+        colorControlsFilter.contrast = 0.9
+        return colorControlsFilter.outputImage!
+    }
 
-        // ===== Step 1: Median Filter で微細ノイズ吸収 =====
-        if let median = CIFilter(name: "CIMedianFilter") {
-            median.setValue(ciImage, forKey: kCIInputImageKey)
-            ciImage = median.outputImage ?? ciImage
+    /// Median Filter で微細ノイズ吸収
+    func median() async throws -> CIImage {
+        let median = CIFilter.median()
+        median.inputImage = self
+        return median.outputImage!
+    }
+
+    func noseReduction() async throws -> CIImage {
+        let noise = CIFilter.noiseReduction()
+        noise.inputImage = self
+        noise.noiseLevel = 0.06   // 0.01〜0.05 推奨
+        noise.sharpness  = 1.5    // 0.3〜0.5
+        return noise.outputImage!
+    }
+
+    /// Posterize で階調を揃えて近似1色化
+    func posterize() async throws -> CIImage {
+        guard let poster = CIFilter(name: "CIColorPosterize") else {
+            throw CreateImageTaskError.unexpectedError
         }
+        poster.setValue(self, forKey: kCIInputImageKey)
+        poster.setValue(3.5, forKey: "inputLevels") // 4〜5程度
+        return poster.outputImage!
+    }
 
-        // ===== Step 2: BoxBlur でアンチエイリアス・境界の揺れを吸収 =====
-        if let boxBlur = CIFilter(name: "CIBoxBlur") {
-            boxBlur.setValue(ciImage, forKey: kCIInputImageKey)
-            boxBlur.setValue(3.0, forKey: kCIInputRadiusKey) // 1〜2px
-            ciImage = boxBlur.outputImage ?? ciImage
+    func kMeans() async throws -> CIImage {
+        let kMeansFilter = CIFilter.kMeans()
+        kMeansFilter.inputImage = self
+        kMeansFilter.extent = self.extent
+        kMeansFilter.count = 30
+        kMeansFilter.passes = 20
+        kMeansFilter.perceptual = false
+        return kMeansFilter.outputImage!
+    }
+
+    func palettize(paletteImage: CIImage) async throws -> CIImage {
+        let palettize = CIFilter.palettize()
+        palettize.inputImage = self
+        palettize.paletteImage = paletteImage
+        palettize.perceptual = true
+        return palettize.outputImage!
+    }
+
+    /// BoxBlur でアンチエイリアス・境界の揺れを吸収
+    func boxBlur() async throws -> CIImage {
+        guard let boxBlurFilter = CIFilter(name: "CIBoxBlur") else {
+            throw CreateImageTaskError.unexpectedError
         }
-
-        // ===== Step 3: Posterize で階調を揃えて近似1色化 =====
-//        if let poster = CIFilter(name: "CIColorPosterize") {
-//            poster.setValue(ciImage, forKey: kCIInputImageKey)
-//            poster.setValue(5.0, forKey: "inputLevels") // 4〜5程度
-//            ciImage = poster.outputImage ?? ciImage
-//        }
-
-        // ===== Step 4: Lab -> RGB に戻す（近似） =====
-        if let labToRGB = CIFilter(name: "CIColorMatrix") {
-            let convertRGBToLabFilter = CIFilter.convertRGBtoLab()
-            convertRGBToLabFilter.inputImage = ciImage
-            convertRGBToLabFilter.normalize = true
-            return convertRGBToLabFilter.outputImage!
-        }
-
-        // ===== Step 5: UIImage に変換して返す =====
-        return ciImage
+        boxBlurFilter.setValue(self, forKey: kCIInputImageKey)
+        boxBlurFilter.setValue(3.0, forKey: kCIInputRadiusKey) // 1〜2px
+        return boxBlurFilter.outputImage!
     }
 }
