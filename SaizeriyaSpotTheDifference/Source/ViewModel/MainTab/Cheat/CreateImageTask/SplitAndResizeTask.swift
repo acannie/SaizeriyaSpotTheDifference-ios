@@ -14,13 +14,14 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
         guard case .single(let image) = imageSuite else {
             throw CreateImageTaskError.unexpectedError
         }
+        var uiImage = image
 
         // 枠を切り落とし
-        let normalizedImage = image.normalized
-        let borderRemovedImage = try await normalizedImage.removeBorder()
+        uiImage = image.normalized
+        uiImage = try await uiImage.removeBorder()
 
         // 左右に分割
-        let splitImage = try borderRemovedImage.splitImage()
+        let splitImage = try uiImage.splitImage()
 
         return .double(left: splitImage.left, right: splitImage.right)
     }
@@ -48,28 +49,9 @@ private extension UIImage {
         step: Int = 10,
         tolerance: CGFloat = 0.3
     ) async throws -> UIImage {
-        guard let cg = self.cgImage else {
-            throw CreateImageTaskError.unexpectedError
-        }
+        let rgbGrid = try await RgbGrid(self)
 
-        let w = cg.width
-        let h = cg.height
-
-        guard let data = cg.dataProvider?.data,
-              let ptr = CFDataGetBytePtr(data) else {
-            throw CreateImageTaskError.unexpectedError
-        }
-
-        func pixel(_ x: Int, _ y: Int) -> Rgb {
-            let i = (y * w + x) * 4
-            return .init(
-                r: CGFloat(ptr[i]) / 255,
-                g: CGFloat(ptr[i+1]) / 255,
-                b: CGFloat(ptr[i+2]) / 255
-            )
-        }
-
-        // ---- Step 1: 各辺ごとに平均色を取得 ----
+        // MARK: 各辺ごとに平均色を取得
         func averageColor(_ samples: [Rgb]) -> Rgb {
             let count = CGFloat(samples.count)
             let total = samples.reduce(Rgb(r: 0, g: 0, b: 0)) { acc, p in
@@ -89,32 +71,44 @@ private extension UIImage {
         // 上
         var topSamples: [Rgb] = []
         for y in 0..<thickness {
-            for x in stride(from: 0, to: w, by: step) {
-                topSamples.append(pixel(x, y))
+            for x in stride(from: 0, to: rgbGrid.width, by: step) {
+                if x > rgbGrid.width {
+                    break
+                }
+                topSamples.append(rgbGrid.pixel(x, y))
             }
         }
 
         // 下
         var bottomSamples: [Rgb] = []
-        for y in (h - thickness)..<h {
-            for x in stride(from: 0, to: w, by: step) {
-                bottomSamples.append(pixel(x, y))
+        for y in (rgbGrid.height - thickness)..<rgbGrid.height {
+            for x in stride(from: 0, to: rgbGrid.width, by: step) {
+                if x > rgbGrid.width {
+                    break
+                }
+                bottomSamples.append(rgbGrid.pixel(x, y))
             }
         }
 
         // 左
         var leftSamples: [Rgb] = []
         for x in 0..<thickness {
-            for y in stride(from: 0, to: h, by: step) {
-                leftSamples.append(pixel(x, y))
+            for y in stride(from: 0, to: rgbGrid.height, by: step) {
+                if y > rgbGrid.height {
+                    break
+                }
+                leftSamples.append(rgbGrid.pixel(x, y))
             }
         }
 
         // 右
         var rightSamples: [Rgb] = []
-        for x in (w - thickness)..<w {
-            for y in stride(from: 0, to: h, by: step) {
-                rightSamples.append(pixel(x, y))
+        for x in (rgbGrid.width - thickness)..<rgbGrid.width {
+            for y in stride(from: 0, to: rgbGrid.height, by: step) {
+                if y > rgbGrid.height {
+                    break
+                }
+                rightSamples.append(rgbGrid.pixel(x, y))
             }
         }
 
@@ -123,49 +117,59 @@ private extension UIImage {
         let leftColor = averageColor(leftSamples)
         let rightColor = averageColor(rightSamples)
 
-        func isNear(_ p: Rgb,
-                    _ base: Rgb) -> Bool {
-            let dr = abs(p.r - base.r)
-            let dg = abs(p.g - base.g)
-            let db = abs(p.b - base.b)
-            return (dr + dg + db) < tolerance
+        func isNear(
+            _ point: Rgb,
+            _ base: Rgb
+        ) -> Bool {
+            let dr = pow(point.r - base.r, 2)
+            let dg = pow(point.g - base.g, 2)
+            let db = pow(point.b - base.b, 2)
+            return sqrt(dr + dg + db) < tolerance
         }
 
-        // ---- Step 2: 辺ごとに内側へ進む ----
+        // MARK: 辺ごとに内側へ進む
 
         var top = 0
-        while top < h {
-            let line = (0..<w).map { pixel($0, top) }
-            if line.filter { isNear($0, topColor) }.count > w / 2 {
+        while top < rgbGrid.height {
+            let line = (0..<rgbGrid.width).map { rgbGrid.pixel($0, top) }
+            if line.filter({ isNear($0, topColor) }).count > rgbGrid.width / 2 {
                 top += 1
-            } else { break }
+            } else {
+                break
+            }
         }
 
-        var bottom = h - 1
+        var bottom = rgbGrid.height - 1
         while bottom >= 0 {
-            let line = (0..<w).map { pixel($0, bottom) }
-            if line.filter { isNear($0, bottomColor) }.count > w / 2 {
+            let line = (0..<rgbGrid.width).map { rgbGrid.pixel($0, bottom) }
+            if line.filter({ isNear($0, bottomColor) }).count > rgbGrid.width / 2 {
                 bottom -= 1
-            } else { break }
+            } else {
+                break
+            }
         }
 
         var left = 0
-        while left < w {
-            let line = (top..<bottom).map { pixel(left, $0) }
-            if line.filter { isNear($0, leftColor) }.count > (bottom-top) / 2 {
+        while left < rgbGrid.width {
+            let line = (top..<bottom).map { rgbGrid.pixel(left, $0) }
+            if line.filter({ isNear($0, leftColor) }).count > (bottom-top) / 2 {
                 left += 1
-            } else { break }
+            } else {
+                break
+            }
         }
 
-        var right = w - 1
+        var right = rgbGrid.width - 1
         while right >= 0 {
-            let line = (top..<bottom).map { pixel(right, $0) }
-            if line.filter { isNear($0, rightColor) }.count > (bottom-top) / 2 {
+            let line = (top..<bottom).map { rgbGrid.pixel(right, $0) }
+            if line.filter({ isNear($0, rightColor) }).count > (bottom-top) / 2 {
                 right -= 1
-            } else { break }
+            } else {
+                break
+            }
         }
 
-        // ---- Step 3: クロップ ----
+        // MARK: クロップ
 
         let rect = CGRect(
             x: left,
@@ -174,7 +178,7 @@ private extension UIImage {
             height: max(bottom - top + 1, 1)
         )
 
-        guard let cropped = cg.cropping(to: rect) else {
+        guard let cropped = self.cgImage?.cropping(to: rect) else {
             throw CreateImageTaskError.unexpectedError
         }
         return UIImage(cgImage: cropped)
