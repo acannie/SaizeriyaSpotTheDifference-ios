@@ -52,12 +52,36 @@ struct ShootingScreenView: View {
 
 private extension ShootingScreenView {
     var footer: some View {
-        HStack {
+        ZStack {
+            HStack {
+                pickerButton
+                    .padding(.leading, 16)
+                Spacer()
+            }
             shootingButton
         }
         .frame(height: footerHeight)
         .frame(maxWidth: .infinity)
         .background(.cameraBackground)
+    }
+
+    var pickerButton: some View {
+        Button(
+            action: {
+            }
+        ) {
+            ZStack {
+                Circle()
+                    .fill(.shutterButtonOutline)
+                    .frame(width: 52, height: 52)
+                Image(systemName: "photo")
+                    .resizable()
+                    .foregroundStyle(.cameraBackground)
+                    .scaledToFit()
+                    .frame(width: 36)
+            }
+        }
+        .disabled(!enableShootingButton)
     }
 
     var shootingButton: some View {
