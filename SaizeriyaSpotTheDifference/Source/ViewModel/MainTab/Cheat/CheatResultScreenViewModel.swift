@@ -35,16 +35,19 @@ final class CheatResultScreenViewModel: ObservableObject {
                 }.value
                 self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
+                updateHeaderText("処理を最後まで完了できませんでした")
                 showAlert(message: error.description)
                 return
             } catch {
+                updateHeaderText("処理を最後まで完了できませんでした")
                 showAlert(message: "予期せぬエラーが発生しました")
                 return
             }
         }
+        // FIXME: 最後のタスクが完成するまでの暫定処理
         switch imageSuite {
         case .single:
-            updateHeaderText("処理を最後まで完了できませんでした")
+            break
         case .double(let left, let right):
             updateHeaderText("間違い探しが完了しました！")
             resultImage = left
