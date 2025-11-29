@@ -10,8 +10,10 @@ import Combine
 
 final class HeaderViewModel: ObservableObject {
     @Published private(set) var text: String = "答え合わせの時間だ！"
+    @Published private(set) var isLoading: Bool = false
 
-    func updateText(_ text: String) {
+    func updateText(_ text: String, isLoading: Bool = false) {
         self.text = text
+        self.isLoading = isLoading
     }
 }

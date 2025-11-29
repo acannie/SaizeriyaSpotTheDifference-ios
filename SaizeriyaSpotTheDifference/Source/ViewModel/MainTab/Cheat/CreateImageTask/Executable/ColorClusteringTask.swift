@@ -6,7 +6,7 @@
 //
 
 struct ColorClusteringTask: CreateImageTaskExecutable {
-    let headerText: String = "写真を加工中……"
+    let headerText: String = "写真を加工中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         try? await Task.sleep(for: .seconds(1))

@@ -8,7 +8,7 @@
 import UIKit
 
 struct PosterizeTask: CreateImageTaskExecutable {
-    let headerText: String = "ポスタライズ加工中……"
+    let headerText: String = "ポスタライズ加工中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         guard case .single(let uiImage) = imageSuite,

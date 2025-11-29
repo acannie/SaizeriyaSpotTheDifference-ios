@@ -26,6 +26,9 @@ struct RootView: View {
         let bottomInset = window?.safeAreaInsets.bottom ?? 0
         return UIScreen.main.bounds.height - topInset - bottomInset
     }
+    // MARK: ヘッダーのドットに関するプロパティ
+    private let maxDotsCount: Int = 6
+    @State private var dotCount: Int = 1
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,12 +41,42 @@ struct RootView: View {
 
 private extension RootView {
     var header: some View {
-        Text(headerViewModel.text)
-            .font(.system(size: 20, weight: .bold))
-            .foregroundStyle(.commonPrimary)
-            .frame(height: headerHeight)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
+        let dotWidth: CGFloat = 3
+        let dotSpacing: CGFloat = 2
+        var dotsWidth: CGFloat {
+            dotWidth * CGFloat(maxDotsCount) + dotSpacing * CGFloat(maxDotsCount - 1)
+        }
+        return HStack(spacing: 0) {
+            Text(headerViewModel.text)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(.commonPrimary)
+            if headerViewModel.isLoading {
+                HStack(spacing: dotSpacing) {
+                    ForEach(0..<dotCount, id: \.self) { count in
+                        Circle()
+                            .foregroundStyle(.commonPrimary)
+                            .frame(width: dotWidth)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: dotsWidth)
+                .padding(.horizontal, 2)
+                .onAppear {
+                    Task {
+                        while headerViewModel.isLoading {
+                            dotCount = (dotCount % maxDotsCount) + 1
+                            try! await Task.sleep(for: .seconds(0.1))
+                        }
+                    }
+                }
+                .onDisappear {
+                    dotCount = 1
+                }
+            }
+        }
+        .frame(height: headerHeight)
+        .frame(maxWidth: .infinity)
+        .background(.commonGreen)
     }
 
     var content: some View {
