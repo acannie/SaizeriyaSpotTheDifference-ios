@@ -8,7 +8,12 @@
 import SwiftUI
 
 struct EnvironmentSettingView: View {
+    @EnvironmentObject private var headerViewModel: HeaderViewModel
+
     var body: some View {
         Text("EnvironmentSetting")
+            .onAppear {
+                headerViewModel.updateText("アプリの詳細はこちら")
+            }
     }
 }
