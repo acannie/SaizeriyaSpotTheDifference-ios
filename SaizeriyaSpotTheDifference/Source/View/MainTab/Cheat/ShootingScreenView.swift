@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import PhotosUI
 
 struct ShootingScreenView: View {
     @Environment(\.layoutHeight) private var layoutHeight
@@ -14,6 +15,8 @@ struct ShootingScreenView: View {
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     @State private var enableShootingButton: Bool = true
+    @State private var photosPickerItem: PhotosPickerItem?
+    @State private var image: UIImage?
     private let footerHeight: CGFloat = 130
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -34,7 +37,21 @@ struct ShootingScreenView: View {
             }
         }
         .onChange(of: camera.capturedImage) {
-            if let image = camera.capturedImage {
+            if let capturedImage = camera.capturedImage {
+                image = capturedImage
+            }
+        }
+        .onChange(of: photosPickerItem) {
+            Task {
+                if let photosPickerItem,
+                   let data = try? await photosPickerItem.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    image = uiImage
+                }
+            }
+        }
+        .onChange(of: image) {
+            if let image {
                 self.navigationRouter.path.append(
                     .result(
                         image,
@@ -66,9 +83,10 @@ private extension ShootingScreenView {
     }
 
     var pickerButton: some View {
-        Button(
-            action: {
-            }
+        PhotosPicker(
+            selection: $photosPickerItem,
+            matching: .images,
+            photoLibrary: .shared()
         ) {
             ZStack {
                 Circle()
@@ -81,7 +99,6 @@ private extension ShootingScreenView {
                     .frame(width: 36)
             }
         }
-        .disabled(!enableShootingButton)
     }
 
     var shootingButton: some View {
