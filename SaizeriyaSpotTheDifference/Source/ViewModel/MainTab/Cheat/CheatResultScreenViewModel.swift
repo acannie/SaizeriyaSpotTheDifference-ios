@@ -11,43 +11,43 @@ import Combine
 final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var imageSuite: ImageSuite
     @Published private(set) var resultImage: UIImage?
-    private let createImageTasks: [CreateImageTaskExecutable]
     @Published var showsErrorAlert: Bool = false
     @Published private(set) var errorMessage: String?
+    private let layoutHeight: LayoutHeight
+    private let cameraPreviewFooterHeight: CGFloat
 
     init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
         self.imageSuite = .single(image)
-        self.createImageTasks = [
-            ClipImageTask(layoutHeight: layoutHeight, cameraPreviewFooterHeight: cameraPreviewFooterHeight),
-            DetectRectangleAndPerspectiveCorrectTask(),
-            PosterizeTask(),
-            SplitAndResizeTask(),
-    //        TakeEffectsTask(),
-    //        ColorClusteringTask(),
-    //        CoordinateClusteringTask(),
-    //        DifferingPixelCoordinatesTask()
-        ]
+        self.layoutHeight = layoutHeight
+       self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
     }
 
     func detectDifferences(updateHeaderText: @escaping (String) -> Void) async {
-        for task in createImageTasks {
-            updateHeaderText(task.headerText)
+        for task in CreateImageTask.allCases {
+            let executable = task.executable(
+                layoutHeight: layoutHeight,
+                cameraPreviewFooterHeight: cameraPreviewFooterHeight
+            )
+            updateHeaderText(executable.headerText)
             do {
                 let imageSuite = try await Task.detached {
-                    try await task.createImageSuite(from: self.imageSuite)
+                    try await executable.createImageSuite(from: self.imageSuite)
                 }.value
                 self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
+                updateHeaderText("処理を最後まで完了できませんでした")
                 showAlert(message: error.description)
                 return
             } catch {
+                updateHeaderText("処理を最後まで完了できませんでした")
                 showAlert(message: "予期せぬエラーが発生しました")
                 return
             }
         }
+        // FIXME: 最後のタスクが完成するまでの暫定処理
         switch imageSuite {
         case .single:
-            updateHeaderText("処理を最後まで完了できませんでした")
+            break
         case .double(let left, let right):
             updateHeaderText("間違い探しが完了しました！")
             resultImage = left
