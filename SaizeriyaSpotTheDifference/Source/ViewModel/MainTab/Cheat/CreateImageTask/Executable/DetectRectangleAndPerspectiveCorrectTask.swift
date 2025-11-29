@@ -11,7 +11,7 @@ import CoreImage.CIFilterBuiltins
 @preconcurrency import Vision
 
 struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
-    let headerText: String = "間違い探しを検出中……"
+    let headerText: String = "間違い探しを検出中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         guard case .single(let uiImage) = imageSuite,

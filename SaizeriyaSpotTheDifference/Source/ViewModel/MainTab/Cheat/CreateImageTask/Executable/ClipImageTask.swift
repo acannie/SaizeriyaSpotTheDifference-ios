@@ -11,7 +11,7 @@ import AVFoundation
 struct ClipImageTask: CreateImageTaskExecutable {
     let layoutHeight: LayoutHeight
     let cameraPreviewFooterHeight: CGFloat
-    var headerText: String = "撮影範囲を計算中……"
+    var headerText: String = "撮影範囲を計算中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         try? await Task.sleep(for: .seconds(1.0))

@@ -8,7 +8,7 @@
 import UIKit
 
 struct SplitAndResizeTask: CreateImageTaskExecutable {
-    let headerText: String = "2枚の絵に分割中……"
+    let headerText: String = "2枚の絵に分割中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         guard case .single(let image) = imageSuite else {

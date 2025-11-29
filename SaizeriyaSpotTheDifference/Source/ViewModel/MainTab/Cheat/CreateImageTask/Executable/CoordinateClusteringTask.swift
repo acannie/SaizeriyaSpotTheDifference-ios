@@ -6,7 +6,7 @@
 //
 
 struct CoordinateClusteringTask: CreateImageTaskExecutable {
-    let headerText: String = "間違いを分類中……"
+    let headerText: String = "間違いを分類中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         try? await Task.sleep(for: .seconds(1))

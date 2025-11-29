@@ -9,7 +9,7 @@ import UIKit
 
 // 精度を確認するための仮実装
 struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
-    let headerText: String = "差分を検出中……"
+    let headerText: String = "差分を検出中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
         guard case .double(let left, let right) = imageSuite,
