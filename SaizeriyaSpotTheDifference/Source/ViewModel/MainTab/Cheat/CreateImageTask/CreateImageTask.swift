@@ -11,6 +11,7 @@ enum CreateImageTask: CaseIterable {
     case loadTransferable
     case clipImage
     case detectRectangleAndPerspectiveCorrect
+    case reduction
     case posterize
     case splitAndResize
 //    case takeEffects
@@ -31,6 +32,8 @@ enum CreateImageTask: CaseIterable {
             )
         case .detectRectangleAndPerspectiveCorrect:
             DetectRectangleAndPerspectiveCorrectTask()
+        case .reduction:
+            ReductionTask()
         case .posterize:
             PosterizeTask()
         case .splitAndResize:
