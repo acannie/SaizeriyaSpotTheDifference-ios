@@ -22,24 +22,24 @@ final class CheatResultScreenViewModel: ObservableObject {
        self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
     }
 
-    func detectDifferences(updateHeaderText: @escaping (String) -> Void) async {
+    func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async {
         for task in CreateImageTask.allCases {
             let executable = task.executable(
                 layoutHeight: layoutHeight,
                 cameraPreviewFooterHeight: cameraPreviewFooterHeight
             )
-            updateHeaderText(executable.headerText)
+            updateHeaderText(executable.headerText, true)
             do {
                 let imageSuite = try await Task.detached {
                     try await executable.createImageSuite(from: self.imageSuite)
                 }.value
                 self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
-                updateHeaderText("処理を最後まで完了できませんでした")
+                updateHeaderText("処理を最後まで完了できませんでした", false)
                 showAlert(message: error.description)
                 return
             } catch {
-                updateHeaderText("処理を最後まで完了できませんでした")
+                updateHeaderText("処理を最後まで完了できませんでした", false)
                 showAlert(message: "予期せぬエラーが発生しました")
                 return
             }
@@ -49,7 +49,7 @@ final class CheatResultScreenViewModel: ObservableObject {
         case .single:
             break
         case .double(let left, let right):
-            updateHeaderText("間違い探しが完了しました！")
+            updateHeaderText("間違い探しが完了しました！", false)
             resultImage = left
         }
     }

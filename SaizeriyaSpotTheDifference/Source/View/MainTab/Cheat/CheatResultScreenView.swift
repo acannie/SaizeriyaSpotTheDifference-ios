@@ -45,8 +45,8 @@ struct CheatResultScreenView: View {
         .navigationBarBackButtonHidden(true)
         .onAppear {
             Task {
-                await viewModel.detectDifferences() { str in
-                    headerViewModel.updateText(str)
+                await viewModel.detectDifferences() { text, isLoading in
+                    headerViewModel.updateText(text, isLoading: isLoading)
                 }
             }
         }

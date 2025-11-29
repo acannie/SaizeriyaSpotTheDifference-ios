@@ -38,12 +38,31 @@ struct RootView: View {
 
 private extension RootView {
     var header: some View {
-        Text(headerViewModel.text)
-            .font(.system(size: 20, weight: .bold))
-            .foregroundStyle(.commonPrimary)
-            .frame(height: headerHeight)
-            .frame(maxWidth: .infinity)
-            .background(.commonGreen)
+        let dotWidth: CGFloat = 5
+        let dotPadding: CGFloat = 5
+        var dotsWidth: CGFloat {
+            (dotWidth + dotPadding * 2) * 3
+        }
+        return HStack(spacing: 0) {
+            Text(headerViewModel.text)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(.commonPrimary)
+            if headerViewModel.isLoading {
+                HStack(spacing: 0) {
+                    ForEach(0..<3, id: \.self) { count in
+                        Circle()
+                            .foregroundStyle(.commonPrimary)
+                            .frame(width: dotWidth)
+                            .padding(.horizontal, dotPadding)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: dotsWidth)
+            }
+        }
+        .frame(height: headerHeight)
+        .frame(maxWidth: .infinity)
+        .background(.commonGreen)
     }
 
     var content: some View {
