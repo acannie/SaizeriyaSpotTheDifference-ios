@@ -18,12 +18,12 @@ final class CheatResultScreenViewModel: ObservableObject {
     private let isCapturedImage: Bool
 
     init(
-        image: UIImage,
+        imageSuite: ImageSuite,
         layoutHeight: LayoutHeight,
         cameraPreviewFooterHeight: CGFloat,
         isCapturedImage: Bool
     ) {
-        self.imageSuite = .single(image)
+        self.imageSuite = imageSuite
         self.layoutHeight = layoutHeight
         self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
         self.isCapturedImage = isCapturedImage
@@ -63,6 +63,8 @@ final class CheatResultScreenViewModel: ObservableObject {
         case .double(let left, let right):
             updateHeaderText("間違い探しが完了しました！", false)
             resultImage = left
+        case .photosPickerItem(_):
+            break
         }
     }
 }

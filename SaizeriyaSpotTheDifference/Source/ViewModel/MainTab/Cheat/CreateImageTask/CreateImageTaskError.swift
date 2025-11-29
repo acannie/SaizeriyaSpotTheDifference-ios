@@ -6,11 +6,14 @@
 //
 
 enum CreateImageTaskError: Error {
+    case couldnotReadImageData
     case couldnotDetectMenuBook
     case unexpectedError
 
     var description: String {
         switch self {
+        case .couldnotReadImageData:
+            "画像データを読み込めませんでした"
         case .couldnotDetectMenuBook:
             "間違い探しを検出できませんでした"
         case .unexpectedError:

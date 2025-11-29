@@ -26,13 +26,13 @@ struct CheatResultScreenView: View {
     }
 
     init(
-        image: UIImage,
+        imageSuite: ImageSuite,
         layoutHeight: LayoutHeight,
         cameraPreviewFooterHeight: CGFloat,
         isCapturedImage: Bool
     ) {
         viewModel = .init(
-            image: image,
+            imageSuite: imageSuite,
             layoutHeight: layoutHeight,
             cameraPreviewFooterHeight: cameraPreviewFooterHeight,
             isCapturedImage: isCapturedImage
@@ -46,6 +46,8 @@ struct CheatResultScreenView: View {
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
                 doubleImageSuite(left: leftImage, right: rightImage)
+            case .photosPickerItem(_):
+                Text("読み込み中")
             }
             result
         }

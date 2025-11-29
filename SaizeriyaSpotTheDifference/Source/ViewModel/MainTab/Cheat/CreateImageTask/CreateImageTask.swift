@@ -8,6 +8,7 @@
 import Foundation
 
 enum CreateImageTask: CaseIterable {
+    case loadTransferable
     case clipImage
     case detectRectangleAndPerspectiveCorrect
     case posterize
@@ -21,6 +22,8 @@ enum CreateImageTask: CaseIterable {
         cameraPreviewFooterHeight: CGFloat
     ) -> CreateImageTaskExecutable {
         switch self {
+        case .loadTransferable:
+            LoadTransferableTask()
         case .clipImage:
             ClipImageTask(
                 layoutHeight: layoutHeight,
@@ -43,6 +46,8 @@ enum CreateImageTask: CaseIterable {
 
     func isNeedToExecute(isCapturedImage: Bool) -> Bool {
         switch self {
+        case .loadTransferable:
+            !isCapturedImage
         case .clipImage:
             isCapturedImage
         default:

@@ -13,16 +13,16 @@ class CheatScreenNavigationRouter: ObservableObject {
 
     enum Key: Hashable {
         case shooting
-        case result(UIImage, cameraPreviewFooterHeight: CGFloat, isCapturedImage: Bool)
+        case result(ImageSuite, cameraPreviewFooterHeight: CGFloat, isCapturedImage: Bool)
 
         @ViewBuilder
         func destination(layoutHeight: LayoutHeight) -> some View {
             switch self {
             case .shooting:
                 ShootingScreenView()
-            case .result(let image, let cameraPreviewFooterHeight, let isCapturedImage):
+            case .result(let imageSuite, let cameraPreviewFooterHeight, let isCapturedImage):
                 CheatResultScreenView(
-                    image: image,
+                    imageSuite: imageSuite,
                     layoutHeight: layoutHeight,
                     cameraPreviewFooterHeight: cameraPreviewFooterHeight,
                     isCapturedImage: isCapturedImage

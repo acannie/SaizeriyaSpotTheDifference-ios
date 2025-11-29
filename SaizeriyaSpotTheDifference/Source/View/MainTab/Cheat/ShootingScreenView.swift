@@ -15,10 +15,7 @@ struct ShootingScreenView: View {
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     @State private var enableShootingButton: Bool = true
-    @State private var showsPhotosPicker: Bool = false
     @State private var photosPickerItem: PhotosPickerItem?
-    @State private var image: UIImage?
-    @State private var isCapturedImage: Bool = false
     private let footerHeight: CGFloat = 130
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -38,37 +35,31 @@ struct ShootingScreenView: View {
                 footer
             }
         }
-        .photosPicker(
-            isPresented: $showsPhotosPicker,
-            selection: $photosPickerItem,
-            matching: .images
-        )
         .onChange(of: camera.capturedImage) {
-            if let capturedImage = camera.capturedImage {
-                isCapturedImage = true
-                image = capturedImage
+            if let image = camera.capturedImage {
+                self.navigationRouter.path.append(
+                    .result(
+                        .single(image),
+                        cameraPreviewFooterHeight: footerHeight,
+                        isCapturedImage: true
+                    )
+                )
             }
         }
         .onChange(of: photosPickerItem) {
-            showsPhotosPicker = false
-            Task {
-                if let photosPickerItem,
-                   let data = try? await photosPickerItem.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    isCapturedImage = false
-                    image = uiImage
-                }
-            }
-        }
-        .onChange(of: image) {
-            if let image {
-                self.navigationRouter.path.append(
-                    .result(
-                        image,
-                        cameraPreviewFooterHeight: footerHeight,
-                        isCapturedImage: isCapturedImage
+            if let photosPickerItem {
+                enableShootingButton = false
+                Task {
+                    // モーダルが閉じるまで待ってから画面遷移する
+                    try? await Task.sleep(for: .seconds(0.5))
+                    self.navigationRouter.path.append(
+                        .result(
+                            .photosPickerItem(photosPickerItem),
+                            cameraPreviewFooterHeight: footerHeight,
+                            isCapturedImage: false
+                        )
                     )
-                )
+                }
             }
         }
         .onAppear {
@@ -77,7 +68,6 @@ struct ShootingScreenView: View {
             camera.startRunning()
         }
         .onDisappear {
-            image = nil
             photosPickerItem = nil
             camera.stopRunning()
         }
