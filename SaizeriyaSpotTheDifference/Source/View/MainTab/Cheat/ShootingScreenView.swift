@@ -15,8 +15,10 @@ struct ShootingScreenView: View {
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     @State private var enableShootingButton: Bool = true
+    @State private var showsPhotosPicker: Bool = false
     @State private var photosPickerItem: PhotosPickerItem?
     @State private var image: UIImage?
+    @State private var isCapturedImage: Bool = false
     private let footerHeight: CGFloat = 130
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -36,16 +38,24 @@ struct ShootingScreenView: View {
                 footer
             }
         }
+        .photosPicker(
+            isPresented: $showsPhotosPicker,
+            selection: $photosPickerItem,
+            matching: .images
+        )
         .onChange(of: camera.capturedImage) {
             if let capturedImage = camera.capturedImage {
+                isCapturedImage = true
                 image = capturedImage
             }
         }
         .onChange(of: photosPickerItem) {
+            showsPhotosPicker = false
             Task {
                 if let photosPickerItem,
                    let data = try? await photosPickerItem.loadTransferable(type: Data.self),
                    let uiImage = UIImage(data: data) {
+                    isCapturedImage = false
                     image = uiImage
                 }
             }
@@ -55,7 +65,8 @@ struct ShootingScreenView: View {
                 self.navigationRouter.path.append(
                     .result(
                         image,
-                        cameraPreviewFooterHeight: footerHeight
+                        cameraPreviewFooterHeight: footerHeight,
+                        isCapturedImage: isCapturedImage
                     )
                 )
             }
@@ -63,6 +74,10 @@ struct ShootingScreenView: View {
         .onAppear {
             enableShootingButton = true
             headerViewModel.updateText("間違い探しを撮影しよう")
+        }
+        .onDisappear {
+            image = nil
+            photosPickerItem = nil
         }
     }
 }

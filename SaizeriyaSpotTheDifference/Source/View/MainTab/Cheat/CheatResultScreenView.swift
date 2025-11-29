@@ -24,11 +24,17 @@ struct CheatResultScreenView: View {
         return .init(width: sideLength, height: sideLength)
     }
 
-    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
+    init(
+        image: UIImage,
+        layoutHeight: LayoutHeight,
+        cameraPreviewFooterHeight: CGFloat,
+        isCapturedImage: Bool
+    ) {
         viewModel = .init(
             image: image,
             layoutHeight: layoutHeight,
-            cameraPreviewFooterHeight: cameraPreviewFooterHeight
+            cameraPreviewFooterHeight: cameraPreviewFooterHeight,
+            isCapturedImage: isCapturedImage
         )
     }
 
@@ -43,11 +49,10 @@ struct CheatResultScreenView: View {
             result
         }
         .navigationBarBackButtonHidden(true)
-        .onAppear {
-            Task {
-                await viewModel.detectDifferences() { text, isLoading in
-                    headerViewModel.updateText(text, isLoading: isLoading)
-                }
+        .task {
+            try? await Task.sleep(for: .seconds(1))
+            await viewModel.detectDifferences() { text, isLoading in
+                headerViewModel.updateText(text, isLoading: isLoading)
             }
         }
         .alert("エラー", isPresented: $viewModel.showsErrorAlert) {

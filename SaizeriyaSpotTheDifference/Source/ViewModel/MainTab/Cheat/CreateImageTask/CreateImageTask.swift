@@ -22,7 +22,10 @@ enum CreateImageTask: CaseIterable {
     ) -> CreateImageTaskExecutable {
         switch self {
         case .clipImage:
-            ClipImageTask(layoutHeight: layoutHeight, cameraPreviewFooterHeight: cameraPreviewFooterHeight)
+            ClipImageTask(
+                layoutHeight: layoutHeight,
+                cameraPreviewFooterHeight: cameraPreviewFooterHeight
+            )
         case .detectRectangleAndPerspectiveCorrect:
             DetectRectangleAndPerspectiveCorrectTask()
         case .posterize:
@@ -35,6 +38,15 @@ enum CreateImageTask: CaseIterable {
 //            ColorClusteringTask()
 //        case .differingPixelCoordinates:
 //            DifferingPixelCoordinatesTask()
+        }
+    }
+
+    func isNeedToExecute(isCapturedImage: Bool) -> Bool {
+        switch self {
+        case .clipImage:
+            isCapturedImage
+        default:
+            true
         }
     }
 }

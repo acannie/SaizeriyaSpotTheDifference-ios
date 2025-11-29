@@ -15,15 +15,25 @@ final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
     private let layoutHeight: LayoutHeight
     private let cameraPreviewFooterHeight: CGFloat
+    private let isCapturedImage: Bool
 
-    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
+    init(
+        image: UIImage,
+        layoutHeight: LayoutHeight,
+        cameraPreviewFooterHeight: CGFloat,
+        isCapturedImage: Bool
+    ) {
         self.imageSuite = .single(image)
         self.layoutHeight = layoutHeight
-       self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
+        self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
+        self.isCapturedImage = isCapturedImage
     }
 
     func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async {
         for task in CreateImageTask.allCases {
+            if !task.isNeedToExecute(isCapturedImage: isCapturedImage) {
+                continue
+            }
             let executable = task.executable(
                 layoutHeight: layoutHeight,
                 cameraPreviewFooterHeight: cameraPreviewFooterHeight
