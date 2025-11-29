@@ -23,7 +23,7 @@ struct PosterizeTask: CreateImageTaskExecutable {
         // ポスタライズ処理
         ciImage = try await ciImage.posterize()
         ciImage = try await ciImage.median()
-        ciImage = try await ciImage.noseReduction()
+        ciImage = try await ciImage.noiseReduction()
         let palette = try await ciImage.kMeans()
         ciImage = try await ciImage.palettize(paletteImage: palette.settingAlphaOne(in: palette.extent))
 
@@ -56,7 +56,8 @@ private extension CIImage {
         return median.outputImage!
     }
 
-    func noseReduction() async throws -> CIImage {
+    /// ノイズ除去
+    func noiseReduction() async throws -> CIImage {
         let noise = CIFilter.noiseReduction()
         noise.inputImage = self
         noise.noiseLevel = 0.06   // 0.01〜0.05 推奨
@@ -74,6 +75,7 @@ private extension CIImage {
         return poster.outputImage!
     }
 
+    /// パレットを作る
     func kMeans() async throws -> CIImage {
         let kMeansFilter = CIFilter.kMeans()
         kMeansFilter.inputImage = self
@@ -84,6 +86,7 @@ private extension CIImage {
         return kMeansFilter.outputImage!
     }
 
+    /// パレットを元に色を分類した画像を作成する
     func palettize(paletteImage: CIImage) async throws -> CIImage {
         let palettize = CIFilter.palettize()
         palettize.inputImage = self
