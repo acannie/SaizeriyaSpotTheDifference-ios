@@ -8,6 +8,18 @@
 import UIKit
 
 extension UIImage {
+    var normalized: UIImage {
+        if imageOrientation == .up {
+            return self
+        }
+
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        draw(in: CGRect(origin: .zero, size: size))
+        let normalized = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        return normalized
+    }
+
     func cropping(to rect: CGRect) -> UIImage? {
         let croppingRect = imageOrientation.isLandscape ? rect.switched : rect
         guard let cgImage = self.cgImage?.cropping(to: croppingRect) else {
