@@ -8,8 +8,10 @@
 import Foundation
 
 enum CreateImageTask: CaseIterable {
+    case loadTransferable
     case clipImage
     case detectRectangleAndPerspectiveCorrect
+    case reduction
     case posterize
     case splitAndResize
 //    case takeEffects
@@ -21,10 +23,17 @@ enum CreateImageTask: CaseIterable {
         cameraPreviewFooterHeight: CGFloat
     ) -> CreateImageTaskExecutable {
         switch self {
+        case .loadTransferable:
+            LoadTransferableTask()
         case .clipImage:
-            ClipImageTask(layoutHeight: layoutHeight, cameraPreviewFooterHeight: cameraPreviewFooterHeight)
+            ClipImageTask(
+                layoutHeight: layoutHeight,
+                cameraPreviewFooterHeight: cameraPreviewFooterHeight
+            )
         case .detectRectangleAndPerspectiveCorrect:
             DetectRectangleAndPerspectiveCorrectTask()
+        case .reduction:
+            ReductionTask()
         case .posterize:
             PosterizeTask()
         case .splitAndResize:
@@ -35,6 +44,17 @@ enum CreateImageTask: CaseIterable {
 //            ColorClusteringTask()
 //        case .differingPixelCoordinates:
 //            DifferingPixelCoordinatesTask()
+        }
+    }
+
+    func isNeedToExecute(imageSource: ImageSource) -> Bool {
+        switch self {
+        case .loadTransferable:
+            imageSource == .photoPicker
+        case .clipImage:
+            imageSource == .camera
+        default:
+            true
         }
     }
 }

@@ -39,7 +39,20 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
             }
 
             self.session.commitConfiguration()
+        }
+    }
+
+    func startRunning() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
             self.session.startRunning()
+        }
+    }
+
+    func stopRunning() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            self.session.stopRunning()
         }
     }
 

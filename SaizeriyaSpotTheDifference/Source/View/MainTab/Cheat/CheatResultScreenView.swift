@@ -11,6 +11,7 @@ struct CheatResultScreenView: View {
     @EnvironmentObject private var headerViewModel: HeaderViewModel
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @ObservedObject private var viewModel: CheatResultScreenViewModel
+    @State private var detectDifferencesTask: Task<Void, Never>?
     @State private var doubleImageSuiteSpacing: CGFloat = 0
     private let imageViewPadding: CGFloat = 10
     private var singleImageSuiteAreaSize: CGSize {
@@ -24,17 +25,25 @@ struct CheatResultScreenView: View {
         return .init(width: sideLength, height: sideLength)
     }
 
-    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
+    init(
+        imageSuite: ImageSuite,
+        layoutHeight: LayoutHeight,
+        cameraPreviewFooterHeight: CGFloat,
+        imageSource: ImageSource
+    ) {
         viewModel = .init(
-            image: image,
+            imageSuite: imageSuite,
             layoutHeight: layoutHeight,
-            cameraPreviewFooterHeight: cameraPreviewFooterHeight
+            cameraPreviewFooterHeight: cameraPreviewFooterHeight,
+            imageSource: imageSource
         )
     }
 
     var body: some View {
         VStack {
             switch viewModel.imageSuite {
+            case .photosPickerItem:
+                photosPickerItemImageSuite
             case .single(let image):
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
@@ -44,11 +53,19 @@ struct CheatResultScreenView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            Task {
-                await viewModel.detectDifferences() { text, isLoading in
-                    headerViewModel.updateText(text, isLoading: isLoading)
+            detectDifferencesTask = Task {
+                do {
+                    try? await Task.sleep(for: .seconds(1))
+                    try await viewModel.detectDifferences() { text, isLoading in
+                        headerViewModel.updateText(text, isLoading: isLoading)
+                    }
+                } catch {
+                    return
                 }
             }
+        }
+        .onDisappear {
+            detectDifferencesTask?.cancel()
         }
         .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
             Button("再撮影") {
@@ -94,6 +111,23 @@ private extension CheatResultScreenView {
             doubleImageSuiteSpacing = imageViewPadding
         }
         .animation(.easeInOut(duration: 0.3), value: doubleImageSuiteSpacing)
+    }
+
+    var photosPickerItemImageSuite: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<2, id: \.self) { _ in
+                ZStack {
+                    Rectangle()
+                        .foregroundStyle(.gray)
+                        .frame(
+                            maxWidth: singleImageSuiteAreaSize.width / 2,
+                            maxHeight: singleImageSuiteAreaSize.height
+                        )
+                        .padding(.vertical, imageViewPadding)
+                    CrestView(color: .white, backgroundColor: .gray)
+                }
+            }
+        }
     }
 
     @ViewBuilder

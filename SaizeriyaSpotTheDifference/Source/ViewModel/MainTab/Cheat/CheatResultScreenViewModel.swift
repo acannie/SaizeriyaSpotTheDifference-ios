@@ -15,25 +15,36 @@ final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
     private let layoutHeight: LayoutHeight
     private let cameraPreviewFooterHeight: CGFloat
+    private let imageSource: ImageSource
 
-    init(image: UIImage, layoutHeight: LayoutHeight, cameraPreviewFooterHeight: CGFloat) {
-        self.imageSuite = .single(image)
+    init(
+        imageSuite: ImageSuite,
+        layoutHeight: LayoutHeight,
+        cameraPreviewFooterHeight: CGFloat,
+        imageSource: ImageSource
+    ) {
+        self.imageSuite = imageSuite
         self.layoutHeight = layoutHeight
-       self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
+        self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
+        self.imageSource = imageSource
     }
 
-    func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async {
+    func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async throws {
         for task in CreateImageTask.allCases {
+            try Task.checkCancellation()
+
+            if !task.isNeedToExecute(imageSource: imageSource) {
+                continue
+            }
             let executable = task.executable(
                 layoutHeight: layoutHeight,
                 cameraPreviewFooterHeight: cameraPreviewFooterHeight
             )
             updateHeaderText(executable.headerText, true)
             do {
-                let imageSuite = try await Task.detached {
+                self.imageSuite = try await Task.detached {
                     try await executable.createImageSuite(from: self.imageSuite)
                 }.value
-                self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
                 updateHeaderText("処理を最後まで完了できませんでした", false)
                 showAlert(message: error.description)
@@ -46,6 +57,8 @@ final class CheatResultScreenViewModel: ObservableObject {
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
         switch imageSuite {
+        case .photosPickerItem:
+            break
         case .single:
             break
         case .double(let left, let right):

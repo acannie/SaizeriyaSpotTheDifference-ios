@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import PhotosUI
 
 struct ShootingScreenView: View {
     @Environment(\.layoutHeight) private var layoutHeight
@@ -14,6 +15,7 @@ struct ShootingScreenView: View {
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @StateObject private var camera = CameraManager()
     @State private var enableShootingButton: Bool = true
+    @State private var photosPickerItem: PhotosPickerItem?
     private let footerHeight: CGFloat = 130
     private let guideLineWidth: CGFloat = 2
     private var guideLineSize: CGSize {
@@ -37,27 +39,73 @@ struct ShootingScreenView: View {
             if let image = camera.capturedImage {
                 self.navigationRouter.path.append(
                     .result(
-                        image,
+                        .single(image),
+                        from: .camera,
                         cameraPreviewFooterHeight: footerHeight
                     )
                 )
             }
         }
+        .onChange(of: photosPickerItem) {
+            if let photosPickerItem {
+                enableShootingButton = false
+                Task {
+                    // モーダルが閉じるまで待ってから画面遷移する
+                    try? await Task.sleep(for: .seconds(0.5))
+                    self.navigationRouter.path.append(
+                        .result(
+                            .photosPickerItem(photosPickerItem),
+                            from: .photoPicker,
+                            cameraPreviewFooterHeight: footerHeight
+                        )
+                    )
+                }
+            }
+        }
         .onAppear {
             enableShootingButton = true
             headerViewModel.updateText("間違い探しを撮影しよう")
+            camera.startRunning()
+        }
+        .onDisappear {
+            photosPickerItem = nil
+            camera.stopRunning()
         }
     }
 }
 
 private extension ShootingScreenView {
     var footer: some View {
-        HStack {
+        ZStack {
+            HStack {
+                pickerButton
+                    .padding(.leading, 16)
+                Spacer()
+            }
             shootingButton
         }
         .frame(height: footerHeight)
         .frame(maxWidth: .infinity)
         .background(.cameraBackground)
+    }
+
+    var pickerButton: some View {
+        PhotosPicker(
+            selection: $photosPickerItem,
+            matching: .images,
+            photoLibrary: .shared()
+        ) {
+            ZStack {
+                Circle()
+                    .fill(.shutterButtonOutline)
+                    .frame(width: 52, height: 52)
+                Image(systemName: "photo")
+                    .resizable()
+                    .foregroundStyle(.cameraBackground)
+                    .scaledToFit()
+                    .frame(width: 36)
+            }
+        }
     }
 
     var shootingButton: some View {

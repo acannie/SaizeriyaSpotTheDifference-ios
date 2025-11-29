@@ -6,8 +6,10 @@
 //
 
 import UIKit
+import _PhotosUI_SwiftUI
 
-enum ImageSuite {
+enum ImageSuite: Hashable {
+    case photosPickerItem(PhotosPickerItem)
     case single(UIImage)
     case double(left: UIImage, right: UIImage)
 }
