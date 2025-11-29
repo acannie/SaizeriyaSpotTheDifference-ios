@@ -42,12 +42,12 @@ struct CheatResultScreenView: View {
     var body: some View {
         VStack {
             switch viewModel.imageSuite {
+            case .photosPickerItem:
+                photosPickerItemImageSuite
             case .single(let image):
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
                 doubleImageSuite(left: leftImage, right: rightImage)
-            case .photosPickerItem:
-                photosPickerItemImageSuite
             }
             result
         }

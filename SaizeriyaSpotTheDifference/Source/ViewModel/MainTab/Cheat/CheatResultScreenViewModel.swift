@@ -57,13 +57,13 @@ final class CheatResultScreenViewModel: ObservableObject {
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
         switch imageSuite {
+        case .photosPickerItem:
+            break
         case .single:
             break
         case .double(let left, let right):
             updateHeaderText("間違い探しが完了しました！", false)
             resultImage = left
-        case .photosPickerItem(_):
-            break
         }
     }
 }
