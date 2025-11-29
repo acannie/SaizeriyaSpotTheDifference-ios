@@ -46,8 +46,8 @@ struct CheatResultScreenView: View {
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
                 doubleImageSuite(left: leftImage, right: rightImage)
-            case .photosPickerItem(_):
-                Text("読み込み中")
+            case .photosPickerItem:
+                photosPickerItemImageSuite
             }
             result
         }
@@ -111,6 +111,23 @@ private extension CheatResultScreenView {
             doubleImageSuiteSpacing = imageViewPadding
         }
         .animation(.easeInOut(duration: 0.3), value: doubleImageSuiteSpacing)
+    }
+
+    var photosPickerItemImageSuite: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<2, id: \.self) { _ in
+                ZStack {
+                    Rectangle()
+                        .foregroundStyle(.gray)
+                        .frame(
+                            maxWidth: singleImageSuiteAreaSize.width / 2,
+                            maxHeight: singleImageSuiteAreaSize.height
+                        )
+                        .padding(.vertical, imageViewPadding)
+                    CrestView(color: .white, backgroundColor: .gray)
+                }
+            }
+        }
     }
 
     @ViewBuilder
