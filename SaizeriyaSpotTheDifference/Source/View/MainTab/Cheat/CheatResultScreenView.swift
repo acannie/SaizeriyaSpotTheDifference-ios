@@ -29,13 +29,13 @@ struct CheatResultScreenView: View {
         imageSuite: ImageSuite,
         layoutHeight: LayoutHeight,
         cameraPreviewFooterHeight: CGFloat,
-        isCapturedImage: Bool
+        imageSource: ImageSource
     ) {
         viewModel = .init(
             imageSuite: imageSuite,
             layoutHeight: layoutHeight,
             cameraPreviewFooterHeight: cameraPreviewFooterHeight,
-            isCapturedImage: isCapturedImage
+            imageSource: imageSource
         )
     }
 

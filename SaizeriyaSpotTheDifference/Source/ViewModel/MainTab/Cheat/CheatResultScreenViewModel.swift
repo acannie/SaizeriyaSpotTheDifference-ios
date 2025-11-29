@@ -15,25 +15,25 @@ final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
     private let layoutHeight: LayoutHeight
     private let cameraPreviewFooterHeight: CGFloat
-    private let isCapturedImage: Bool
+    private let imageSource: ImageSource
 
     init(
         imageSuite: ImageSuite,
         layoutHeight: LayoutHeight,
         cameraPreviewFooterHeight: CGFloat,
-        isCapturedImage: Bool
+        imageSource: ImageSource
     ) {
         self.imageSuite = imageSuite
         self.layoutHeight = layoutHeight
         self.cameraPreviewFooterHeight = cameraPreviewFooterHeight
-        self.isCapturedImage = isCapturedImage
+        self.imageSource = imageSource
     }
 
     func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async throws {
         for task in CreateImageTask.allCases {
             try Task.checkCancellation()
 
-            if !task.isNeedToExecute(isCapturedImage: isCapturedImage) {
+            if !task.isNeedToExecute(imageSource: imageSource) {
                 continue
             }
             let executable = task.executable(
@@ -42,10 +42,9 @@ final class CheatResultScreenViewModel: ObservableObject {
             )
             updateHeaderText(executable.headerText, true)
             do {
-                let imageSuite = try await Task.detached {
+                self.imageSuite = try await Task.detached {
                     try await executable.createImageSuite(from: self.imageSuite)
                 }.value
-                self.imageSuite = imageSuite
             } catch let error as CreateImageTaskError {
                 updateHeaderText("処理を最後まで完了できませんでした", false)
                 showAlert(message: error.description)

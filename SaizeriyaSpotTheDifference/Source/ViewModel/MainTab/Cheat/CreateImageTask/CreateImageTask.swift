@@ -44,12 +44,12 @@ enum CreateImageTask: CaseIterable {
         }
     }
 
-    func isNeedToExecute(isCapturedImage: Bool) -> Bool {
+    func isNeedToExecute(imageSource: ImageSource) -> Bool {
         switch self {
         case .loadTransferable:
-            !isCapturedImage
+            imageSource == .photoPicker
         case .clipImage:
-            isCapturedImage
+            imageSource == .camera
         default:
             true
         }

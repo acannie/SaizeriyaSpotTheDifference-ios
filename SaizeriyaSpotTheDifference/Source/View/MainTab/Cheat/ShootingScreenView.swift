@@ -40,8 +40,8 @@ struct ShootingScreenView: View {
                 self.navigationRouter.path.append(
                     .result(
                         .single(image),
-                        cameraPreviewFooterHeight: footerHeight,
-                        isCapturedImage: true
+                        from: .camera,
+                        cameraPreviewFooterHeight: footerHeight
                     )
                 )
             }
@@ -55,8 +55,8 @@ struct ShootingScreenView: View {
                     self.navigationRouter.path.append(
                         .result(
                             .photosPickerItem(photosPickerItem),
-                            cameraPreviewFooterHeight: footerHeight,
-                            isCapturedImage: false
+                            from: .photoPicker,
+                            cameraPreviewFooterHeight: footerHeight
                         )
                     )
                 }
