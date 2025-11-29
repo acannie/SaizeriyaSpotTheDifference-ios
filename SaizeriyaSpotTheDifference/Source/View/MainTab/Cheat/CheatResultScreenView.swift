@@ -11,6 +11,7 @@ struct CheatResultScreenView: View {
     @EnvironmentObject private var headerViewModel: HeaderViewModel
     @EnvironmentObject private var navigationRouter: CheatScreenNavigationRouter
     @ObservedObject private var viewModel: CheatResultScreenViewModel
+    @State private var detectDifferencesTask: Task<Void, Never>?
     @State private var doubleImageSuiteSpacing: CGFloat = 0
     private let imageViewPadding: CGFloat = 10
     private var singleImageSuiteAreaSize: CGSize {
@@ -49,11 +50,20 @@ struct CheatResultScreenView: View {
             result
         }
         .navigationBarBackButtonHidden(true)
-        .task {
-            try? await Task.sleep(for: .seconds(1))
-            await viewModel.detectDifferences() { text, isLoading in
-                headerViewModel.updateText(text, isLoading: isLoading)
+        .onAppear {
+            detectDifferencesTask = Task {
+                do {
+                    try? await Task.sleep(for: .seconds(1))
+                    try await viewModel.detectDifferences() { text, isLoading in
+                        headerViewModel.updateText(text, isLoading: isLoading)
+                    }
+                } catch {
+                    return
+                }
             }
+        }
+        .onDisappear {
+            detectDifferencesTask?.cancel()
         }
         .alert("エラー", isPresented: $viewModel.showsErrorAlert) {
             Button("再撮影") {

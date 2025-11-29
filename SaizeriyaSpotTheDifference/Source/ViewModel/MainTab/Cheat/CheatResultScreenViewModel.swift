@@ -29,8 +29,10 @@ final class CheatResultScreenViewModel: ObservableObject {
         self.isCapturedImage = isCapturedImage
     }
 
-    func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async {
+    func detectDifferences(updateHeaderText: @escaping (String, Bool) -> Void) async throws {
         for task in CreateImageTask.allCases {
+            try Task.checkCancellation()
+
             if !task.isNeedToExecute(isCapturedImage: isCapturedImage) {
                 continue
             }

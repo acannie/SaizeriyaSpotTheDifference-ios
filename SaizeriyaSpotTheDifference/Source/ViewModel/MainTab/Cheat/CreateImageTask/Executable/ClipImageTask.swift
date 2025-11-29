@@ -14,8 +14,6 @@ struct ClipImageTask: CreateImageTaskExecutable {
     var headerText: String = "撮影範囲を計算中"
 
     func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        try? await Task.sleep(for: .seconds(1.0))
-
         guard case .single(let image) = imageSuite else {
             throw CreateImageTaskError.unexpectedError
         }
