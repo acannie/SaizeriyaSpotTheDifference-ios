@@ -74,10 +74,12 @@ struct ShootingScreenView: View {
         .onAppear {
             enableShootingButton = true
             headerViewModel.updateText("間違い探しを撮影しよう")
+            camera.startRunning()
         }
         .onDisappear {
             image = nil
             photosPickerItem = nil
+            camera.stopRunning()
         }
     }
 }
