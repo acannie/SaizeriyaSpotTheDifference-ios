@@ -10,8 +10,8 @@ import UIKit
 struct PosterizeTask: CreateImageTaskExecutable {
     let headerText: String = "ポスタライズ加工中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite,
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .single(let uiImage) = imageSuite.forProcessing,
               let cgImage = uiImage.cgImage else {
             throw CreateImageTaskError.unexpectedError
         }
@@ -35,7 +35,11 @@ struct PosterizeTask: CreateImageTaskExecutable {
             orientation: uiImage.imageOrientation
         )
 
-        return .single(resultImage)
+        return .init(
+            forProcessing: .single(resultImage),
+            forPreview: imageSuite.forPreview,
+            result: nil
+        )
     }
 }
 

@@ -8,7 +8,7 @@
 struct TakeEffectsTask: CreateImageTaskExecutable {
     let headerText: String = "撮影した写真を加工中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
         try? await Task.sleep(for: .seconds(1))
         return imageSuite
     }

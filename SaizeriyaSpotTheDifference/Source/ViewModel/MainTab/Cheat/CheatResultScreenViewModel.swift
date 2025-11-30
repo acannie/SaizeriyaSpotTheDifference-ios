@@ -43,7 +43,7 @@ final class CheatResultScreenViewModel: ObservableObject {
             updateHeaderText(executable.headerText, true)
             do {
                 self.imageSuite = try await Task.detached {
-                    try await executable.createImageSuite(from: self.imageSuite)
+                    try await executable.process(from: self.imageSuite)
                 }.value
             } catch let error as CreateImageTaskError {
                 updateHeaderText("処理を最後まで完了できませんでした", false)
@@ -56,7 +56,7 @@ final class CheatResultScreenViewModel: ObservableObject {
             }
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
-        switch imageSuite {
+        switch imageSuite.forProcessing {
         case .photosPickerItem:
             break
         case .single:

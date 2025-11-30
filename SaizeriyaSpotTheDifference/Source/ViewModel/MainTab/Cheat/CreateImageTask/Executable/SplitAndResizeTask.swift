@@ -10,46 +10,40 @@ import UIKit
 struct SplitAndResizeTask: CreateImageTaskExecutable {
     let headerText: String = "2枚の絵に分割中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite else {
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .single(let image) = imageSuite.forProcessing,
+              case .single(let previewImage) = imageSuite.forPreview else {
             throw CreateImageTaskError.unexpectedError
         }
         var uiImage = image
+        var previewUiImage = previewImage
 
         // 枠を切り落とし
-        uiImage = image.normalized
-        uiImage = try await uiImage.removeBorder()
+        uiImage = uiImage.normalized
+        let rect = try await rectWithoutBorder(image: uiImage)
+        uiImage = try await uiImage.removeBorder(rect: rect)
+        previewUiImage = try await previewUiImage.removeBorder(rect: rect)
 
         // 左右に分割
         let splitImage = try uiImage.splitImage()
+        let splitPreviewImage = try previewUiImage.splitImage()
 
-        return .double(left: splitImage.left, right: splitImage.right)
+        return .init(
+            forProcessing: .double(left: splitImage.left, right: splitImage.right),
+            forPreview: .double(left: splitPreviewImage.left, right: splitPreviewImage.right),
+            result: nil
+        )
     }
 }
 
-private extension UIImage {
-    func splitImage() throws -> (left: UIImage, right: UIImage) {
-        let width = self.size.width
-        let height = self.size.height
-
-        let leftRect = CGRect(x: 0, y: 0, width: width / 2, height: height)
-        let rightRect = CGRect(x: width / 2, y: 0, width: width / 2, height: height)
-
-        guard
-            let leftImage = self.cropping(to: leftRect),
-            let rightImage = self.cropping(to: rightRect) else {
-            throw CreateImageTaskError.unexpectedError
-        }
-
-        return (leftImage, rightImage)
-    }
-
-    func removeBorder(
+private extension SplitAndResizeTask {
+    func rectWithoutBorder(
+        image: UIImage,
         thickness: Int = 5,
         step: Int = 10,
         tolerance: CGFloat = 0.3
-    ) async throws -> UIImage {
-        let rgbGrid = try await RgbGrid(self)
+    ) async throws -> CGRect {
+        let rgbGrid = try await RgbGrid(image)
 
         // MARK: 各辺ごとに平均色を取得
         func averageColor(_ samples: [Rgb]) -> Rgb {
@@ -169,15 +163,35 @@ private extension UIImage {
             }
         }
 
-        // MARK: クロップ
-
+        // MARK: 枠を除いたメニューブックの範囲を返す
         let rect = CGRect(
             x: left,
             y: top,
             width: max(right - left + 1, 1),
             height: max(bottom - top + 1, 1)
         )
+        return rect
+    }
+}
 
+private extension UIImage {
+    func splitImage() throws -> (left: UIImage, right: UIImage) {
+        let width = self.size.width
+        let height = self.size.height
+
+        let leftRect = CGRect(x: 0, y: 0, width: width / 2, height: height)
+        let rightRect = CGRect(x: width / 2, y: 0, width: width / 2, height: height)
+
+        guard
+            let leftImage = self.cropping(to: leftRect),
+            let rightImage = self.cropping(to: rightRect) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+
+        return (leftImage, rightImage)
+    }
+
+    func removeBorder(rect: CGRect) async throws -> UIImage {
         guard let cropped = self.cgImage?.cropping(to: rect) else {
             throw CreateImageTaskError.unexpectedError
         }

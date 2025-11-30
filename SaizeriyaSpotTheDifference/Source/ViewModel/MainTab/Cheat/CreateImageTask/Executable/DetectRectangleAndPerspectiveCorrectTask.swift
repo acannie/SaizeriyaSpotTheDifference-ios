@@ -13,8 +13,8 @@ import CoreImage.CIFilterBuiltins
 struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
     let headerText: String = "間違い探しを検出中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite,
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .single(let uiImage) = imageSuite.forProcessing,
               let cgImage = uiImage.cgImage else {
             throw CreateImageTaskError.unexpectedError
         }
@@ -37,7 +37,11 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
             orientation: uiImage.imageOrientation
         )
 
-        return .single(resultImage)
+        return .init(
+            forProcessing: .single(resultImage),
+            forPreview: .single(resultImage),
+            result: nil
+        )
     }
 }
 

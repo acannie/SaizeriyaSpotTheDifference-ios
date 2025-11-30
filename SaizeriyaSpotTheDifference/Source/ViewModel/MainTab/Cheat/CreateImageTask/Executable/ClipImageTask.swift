@@ -13,8 +13,8 @@ struct ClipImageTask: CreateImageTaskExecutable {
     let cameraPreviewFooterHeight: CGFloat
     var headerText: String = "撮影範囲を計算中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite else {
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .single(let image) = imageSuite.forProcessing else {
             throw CreateImageTaskError.unexpectedError
         }
 
@@ -25,7 +25,11 @@ struct ClipImageTask: CreateImageTaskExecutable {
             throw CreateImageTaskError.unexpectedError
         }
 
-        return .single(previewedImage)
+        return .init(
+            forProcessing: .single(previewedImage),
+            forPreview: .single(previewedImage),
+            result: nil
+        )
     }
 }
 

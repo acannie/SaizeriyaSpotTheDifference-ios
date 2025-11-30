@@ -9,7 +9,7 @@ import CoreImage
 
 protocol CreateImageTaskExecutable {
     var headerText: String { get }
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite
     func ciImageToRGBA8(
         _ ciImage: CIImage,
         context: CIContext,

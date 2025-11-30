@@ -12,14 +12,18 @@ import SwiftUI
 struct ReductionTask: CreateImageTaskExecutable {
     let headerText: String = "画像サイズを調整中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(var uiImage) = imageSuite else {
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .single(var uiImage) = imageSuite.forProcessing else {
             throw CreateImageTaskError.unexpectedError
         }
 
         uiImage = await uiImage.reduction(height: 300)
 
-        return .single(uiImage)
+        return .init(
+            forProcessing: .single(uiImage),
+            forPreview: .single(uiImage),
+            result: nil
+        )
     }
 }
 
