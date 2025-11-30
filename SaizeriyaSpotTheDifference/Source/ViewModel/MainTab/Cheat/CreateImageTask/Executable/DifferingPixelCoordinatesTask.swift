@@ -24,29 +24,65 @@ struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
         let ciImageRight = CIImage(cgImage: cgImageRight)
 
         // ポスタライズ処理
-        let diffImage1 = try await computeDifference1(context: context, imageLeft: ciImageLeft, imageRight: ciImageRight)
+        let diffImage1 = try await computeDifferenceTransparent(context: context, imageLeft: ciImageLeft, imageRight: ciImageRight)
+
+        // ResultPayloadを作成
+        guard case .double(let leftPreviewImage, _) = imageSuite.preview else {
+            throw CreateImageTaskError.unexpectedError
+        }
+        let baseImage = leftPreviewImage
 
         return .init(
             processing: .single(diffImage1),
             preview: imageSuite.preview,
-            result: nil
+            result: .init(
+                baseImage: diffImage1,
+                leftImageDifferenceLayers: [],
+                rightImageDifferenceLayers: []
+            )
         )
     }
 }
 
 private extension DifferingPixelCoordinatesTask {
-    func computeDifference1(
+    func computeDifferenceTransparent(
         context: CIContext,
         imageLeft: CIImage,
         imageRight: CIImage
     ) async throws -> UIImage {
+        // 1. difference blend
         let diffFilter = CIFilter.differenceBlendMode()
         diffFilter.inputImage = imageLeft
         diffFilter.backgroundImage = imageRight
-        let diffOutput = diffFilter.outputImage!
+        guard let diffOutput = diffFilter.outputImage else {
+            throw CreateImageTaskError.unexpectedError
+        }
 
-        let cgimg = try diffOutput.createCgImage(with: context)
-        let diffImage = UIImage(cgImage: cgimg)
-        return diffImage
+        // 2. 黒(0,0,0) → 透明 に変換する
+        //    → RGB をアルファにコピーするイメージ
+        //      { r, g, b, a } → { r, g, b, max(r,g,b) }
+        let colorMatrix = CIFilter.colorMatrix()
+        colorMatrix.inputImage = diffOutput
+
+        // RGB はそのまま
+        colorMatrix.rVector = CIVector(x: 1, y: 0, z: 0, w: 0)
+        colorMatrix.gVector = CIVector(x: 0, y: 1, z: 0, w: 0)
+        colorMatrix.bVector = CIVector(x: 0, y: 0, z: 1, w: 0)
+
+        // アルファ値 = RGB の最大値（差分が大きいほど不透明）
+        colorMatrix.aVector = CIVector(x: 1, y: 1, z: 1, w: 0)
+
+        guard let transparentOutput = colorMatrix.outputImage else {
+            throw NSError(domain: "colormatrix", code: -2)
+        }
+
+        // 3. CGImage 化
+        guard let cgimg = context.createCGImage(
+            transparentOutput,
+            from: transparentOutput.extent
+        ) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+        return UIImage(cgImage: cgimg)
     }
 }
