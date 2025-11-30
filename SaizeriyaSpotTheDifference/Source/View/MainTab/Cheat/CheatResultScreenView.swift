@@ -26,13 +26,17 @@ struct CheatResultScreenView: View {
     }
 
     init(
-        imageSuite: ImageSuite,
+        imagePayload: ImagePayload,
         layoutHeight: LayoutHeight,
         cameraPreviewFooterHeight: CGFloat,
         imageSource: ImageSource
     ) {
         viewModel = .init(
-            imageSuite: imageSuite,
+            imageSuite: .init(
+                processing: imagePayload,
+                preview: imagePayload,
+                result: nil
+            ),
             layoutHeight: layoutHeight,
             cameraPreviewFooterHeight: cameraPreviewFooterHeight,
             imageSource: imageSource
@@ -41,7 +45,7 @@ struct CheatResultScreenView: View {
 
     var body: some View {
         VStack {
-            switch viewModel.imageSuite {
+            switch viewModel.imageSuite.preview {
             case .photosPickerItem:
                 photosPickerItemImageSuite
             case .single(let image):
@@ -133,7 +137,7 @@ private extension CheatResultScreenView {
     @ViewBuilder
     var result: some View {
         if let resultImage = viewModel.resultImage {
-            Image(uiImage: resultImage)
+            Image(uiImage: resultImage.baseImage)
                 .resizable()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(imageViewPadding)

@@ -12,8 +12,8 @@ import SwiftUI
 struct LoadTransferableTask: CreateImageTaskExecutable {
     let headerText: String = "画像を読み込み中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .photosPickerItem(let photosPickerItem) = imageSuite else {
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .photosPickerItem(let photosPickerItem) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
 
@@ -22,6 +22,10 @@ struct LoadTransferableTask: CreateImageTaskExecutable {
             throw CreateImageTaskError.couldnotReadImageData
         }
 
-        return .single(uiImage)
+        return .init(
+            processing: .single(uiImage),
+            preview: .single(uiImage),
+            result: nil
+        )
     }
 }

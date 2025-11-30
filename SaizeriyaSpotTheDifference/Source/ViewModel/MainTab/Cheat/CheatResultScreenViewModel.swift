@@ -10,7 +10,7 @@ import Combine
 
 final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var imageSuite: ImageSuite
-    @Published private(set) var resultImage: UIImage?
+    @Published private(set) var resultImage: ResultImagePayload?
     @Published var showsErrorAlert: Bool = false
     @Published private(set) var errorMessage: String?
     private let layoutHeight: LayoutHeight
@@ -43,7 +43,7 @@ final class CheatResultScreenViewModel: ObservableObject {
             updateHeaderText(executable.headerText, true)
             do {
                 self.imageSuite = try await Task.detached {
-                    try await executable.createImageSuite(from: self.imageSuite)
+                    try await executable.process(from: self.imageSuite)
                 }.value
             } catch let error as CreateImageTaskError {
                 updateHeaderText("処理を最後まで完了できませんでした", false)
@@ -56,14 +56,9 @@ final class CheatResultScreenViewModel: ObservableObject {
             }
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
-        switch imageSuite {
-        case .photosPickerItem:
-            break
-        case .single:
-            break
-        case .double(let left, let right):
+        if let resultImage = imageSuite.result {
             updateHeaderText("間違い探しが完了しました！", false)
-            resultImage = left
+            self.resultImage = resultImage
         }
     }
 }

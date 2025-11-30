@@ -11,8 +11,8 @@ import UIKit
 struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
     let headerText: String = "差分を検出中"
 
-    func createImageSuite(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .double(let left, let right) = imageSuite,
+    func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
+        guard case .double(let left, let right) = imageSuite.processing,
               let cgImageLeft = left.cgImage,
               let cgImageRight = right.cgImage else {
             throw CreateImageTaskError.unexpectedError
@@ -26,7 +26,11 @@ struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
         // ポスタライズ処理
         let diffImage1 = try await computeDifference1(context: context, imageLeft: ciImageLeft, imageRight: ciImageRight)
 
-        return .single(diffImage1)
+        return .init(
+            processing: .single(diffImage1),
+            preview: imageSuite.preview,
+            result: nil
+        )
     }
 }
 
