@@ -40,7 +40,7 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .single(resultImage),
             imageForPreview: .single(resultImage),
-            result: nil
+            resultImage: nil
         )
     }
 }

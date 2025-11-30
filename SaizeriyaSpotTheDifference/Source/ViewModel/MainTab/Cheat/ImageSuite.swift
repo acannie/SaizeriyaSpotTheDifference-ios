@@ -10,5 +10,5 @@ import UIKit
 struct ImageSuite {
     let imageForProcessing: ImagePayload
     let imageForPreview: ImagePayload
-    let result: UIImage?
+    let resultImage: ResultImagePayload?
 }

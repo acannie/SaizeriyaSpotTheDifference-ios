@@ -22,7 +22,7 @@ struct ReductionTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .single(uiImage),
             imageForPreview: .single(uiImage),
-            result: nil
+            resultImage: nil
         )
     }
 }

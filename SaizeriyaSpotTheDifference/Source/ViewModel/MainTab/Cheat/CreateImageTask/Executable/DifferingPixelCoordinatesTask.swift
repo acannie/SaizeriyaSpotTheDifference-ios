@@ -29,7 +29,7 @@ struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .single(diffImage1),
             imageForPreview: imageSuite.imageForPreview,
-            result: nil
+            resultImage: nil
         )
     }
 }

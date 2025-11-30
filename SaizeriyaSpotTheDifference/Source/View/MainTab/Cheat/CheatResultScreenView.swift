@@ -35,7 +35,7 @@ struct CheatResultScreenView: View {
             imageSuite: .init(
                 imageForProcessing: imagePayload,
                 imageForPreview: imagePayload,
-                result: nil
+                resultImage: nil
             ),
             layoutHeight: layoutHeight,
             cameraPreviewFooterHeight: cameraPreviewFooterHeight,

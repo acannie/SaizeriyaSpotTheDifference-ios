@@ -28,7 +28,7 @@ struct ClipImageTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .single(previewedImage),
             imageForPreview: .single(previewedImage),
-            result: nil
+            resultImage: nil
         )
     }
 }

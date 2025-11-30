@@ -38,7 +38,7 @@ struct PosterizeTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .single(resultImage),
             imageForPreview: imageSuite.imageForPreview,
-            result: nil
+            resultImage: nil
         )
     }
 }

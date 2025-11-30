@@ -31,7 +31,7 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
         return .init(
             imageForProcessing: .double(left: splitImage.left, right: splitImage.right),
             imageForPreview: .double(left: splitPreviewImage.left, right: splitPreviewImage.right),
-            result: nil
+            resultImage: nil
         )
     }
 }
