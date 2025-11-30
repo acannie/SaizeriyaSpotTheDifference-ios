@@ -8,7 +8,7 @@
 import UIKit
 
 struct ImageSuite {
-    let imageForProcessing: ImagePayload
-    let imageForPreview: ImagePayload
-    let resultImage: ResultImagePayload?
+    let processing: ImagePayload
+    let preview: ImagePayload
+    let result: ResultImagePayload?
 }

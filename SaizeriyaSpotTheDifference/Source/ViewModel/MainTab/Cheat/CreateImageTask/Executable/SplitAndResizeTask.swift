@@ -11,8 +11,8 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
     let headerText: String = "2枚の絵に分割中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite.imageForProcessing,
-              case .single(let previewImage) = imageSuite.imageForPreview else {
+        guard case .single(let image) = imageSuite.processing,
+              case .single(let previewImage) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
         var uiImage = image
@@ -29,9 +29,9 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
         let splitPreviewImage = try previewUiImage.splitImage()
 
         return .init(
-            imageForProcessing: .double(left: splitImage.left, right: splitImage.right),
-            imageForPreview: .double(left: splitPreviewImage.left, right: splitPreviewImage.right),
-            resultImage: nil
+            processing: .double(left: splitImage.left, right: splitImage.right),
+            preview: .double(left: splitPreviewImage.left, right: splitPreviewImage.right),
+            result: nil
         )
     }
 }

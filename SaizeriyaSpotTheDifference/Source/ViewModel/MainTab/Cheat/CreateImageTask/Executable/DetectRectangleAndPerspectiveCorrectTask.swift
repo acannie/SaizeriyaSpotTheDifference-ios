@@ -14,7 +14,7 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
     let headerText: String = "間違い探しを検出中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite.imageForProcessing,
+        guard case .single(let uiImage) = imageSuite.processing,
               let cgImage = uiImage.cgImage else {
             throw CreateImageTaskError.unexpectedError
         }
@@ -38,9 +38,9 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
         )
 
         return .init(
-            imageForProcessing: .single(resultImage),
-            imageForPreview: .single(resultImage),
-            resultImage: nil
+            processing: .single(resultImage),
+            preview: .single(resultImage),
+            result: nil
         )
     }
 }

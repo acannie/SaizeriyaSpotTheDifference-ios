@@ -14,7 +14,7 @@ struct ClipImageTask: CreateImageTaskExecutable {
     var headerText: String = "撮影範囲を計算中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite.imageForProcessing else {
+        guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
 
@@ -26,9 +26,9 @@ struct ClipImageTask: CreateImageTaskExecutable {
         }
 
         return .init(
-            imageForProcessing: .single(previewedImage),
-            imageForPreview: .single(previewedImage),
-            resultImage: nil
+            processing: .single(previewedImage),
+            preview: .single(previewedImage),
+            result: nil
         )
     }
 }

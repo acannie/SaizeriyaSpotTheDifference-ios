@@ -10,7 +10,7 @@ import Combine
 
 final class CheatResultScreenViewModel: ObservableObject {
     @Published private(set) var imageSuite: ImageSuite
-    @Published private(set) var resultImage: UIImage?
+    @Published private(set) var resultImage: ResultImagePayload?
     @Published var showsErrorAlert: Bool = false
     @Published private(set) var errorMessage: String?
     private let layoutHeight: LayoutHeight
@@ -56,14 +56,9 @@ final class CheatResultScreenViewModel: ObservableObject {
             }
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
-        switch imageSuite.imageForProcessing {
-        case .photosPickerItem:
-            break
-        case .single:
-            break
-        case .double(let left, let right):
+        if let resultImage = imageSuite.result {
             updateHeaderText("間違い探しが完了しました！", false)
-            resultImage = left
+            self.resultImage = resultImage
         }
     }
 }
