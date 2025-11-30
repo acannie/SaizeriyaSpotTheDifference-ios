@@ -11,7 +11,7 @@ struct PosterizeTask: CreateImageTaskExecutable {
     let headerText: String = "ポスタライズ加工中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite.forProcessing,
+        guard case .single(let uiImage) = imageSuite.imageForProcessing,
               let cgImage = uiImage.cgImage else {
             throw CreateImageTaskError.unexpectedError
         }
@@ -36,8 +36,8 @@ struct PosterizeTask: CreateImageTaskExecutable {
         )
 
         return .init(
-            forProcessing: .single(resultImage),
-            forPreview: imageSuite.forPreview,
+            imageForProcessing: .single(resultImage),
+            imageForPreview: imageSuite.imageForPreview,
             result: nil
         )
     }

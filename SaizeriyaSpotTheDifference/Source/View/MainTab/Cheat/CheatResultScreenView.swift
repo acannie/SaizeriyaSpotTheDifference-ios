@@ -33,8 +33,8 @@ struct CheatResultScreenView: View {
     ) {
         viewModel = .init(
             imageSuite: .init(
-                forProcessing: imagePayload,
-                forPreview: imagePayload,
+                imageForProcessing: imagePayload,
+                imageForPreview: imagePayload,
                 result: nil
             ),
             layoutHeight: layoutHeight,
@@ -45,7 +45,7 @@ struct CheatResultScreenView: View {
 
     var body: some View {
         VStack {
-            switch viewModel.imageSuite.forPreview {
+            switch viewModel.imageSuite.imageForPreview {
             case .photosPickerItem:
                 photosPickerItemImageSuite
             case .single(let image):

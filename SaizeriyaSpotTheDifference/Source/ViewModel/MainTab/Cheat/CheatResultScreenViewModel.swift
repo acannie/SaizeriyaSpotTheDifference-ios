@@ -56,7 +56,7 @@ final class CheatResultScreenViewModel: ObservableObject {
             }
         }
         // FIXME: 最後のタスクが完成するまでの暫定処理
-        switch imageSuite.forProcessing {
+        switch imageSuite.imageForProcessing {
         case .photosPickerItem:
             break
         case .single:

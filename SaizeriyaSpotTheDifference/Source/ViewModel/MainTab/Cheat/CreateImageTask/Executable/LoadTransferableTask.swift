@@ -13,7 +13,7 @@ struct LoadTransferableTask: CreateImageTaskExecutable {
     let headerText: String = "画像を読み込み中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .photosPickerItem(let photosPickerItem) = imageSuite.forProcessing else {
+        guard case .photosPickerItem(let photosPickerItem) = imageSuite.imageForProcessing else {
             throw CreateImageTaskError.unexpectedError
         }
 
@@ -23,8 +23,8 @@ struct LoadTransferableTask: CreateImageTaskExecutable {
         }
 
         return .init(
-            forProcessing: .single(uiImage),
-            forPreview: .single(uiImage),
+            imageForProcessing: .single(uiImage),
+            imageForPreview: .single(uiImage),
             result: nil
         )
     }
