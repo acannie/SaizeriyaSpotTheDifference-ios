@@ -50,17 +50,20 @@ private extension DifferingPixelCoordinatesTask {
         imageLeft: CIImage,
         imageRight: CIImage
     ) async throws -> UIImage {
+        // --- ① 軽くぼかす ---
+        let blurRadius: CGFloat = 2.0
+        let blurLeft = imageLeft.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": blurRadius])
+        let blurRight = imageRight.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": blurRadius])
+
         // 1. difference blend
         let diffFilter = CIFilter.differenceBlendMode()
-        diffFilter.inputImage = imageLeft
-        diffFilter.backgroundImage = imageRight
-        guard let diffOutput = diffFilter.outputImage else {
+        diffFilter.inputImage = blurLeft
+        diffFilter.backgroundImage = blurRight
+        guard var diffOutput = diffFilter.outputImage else {
             throw CreateImageTaskError.unexpectedError
         }
 
         // 2. 黒(0,0,0) → 透明 に変換する
-        //    → RGB をアルファにコピーするイメージ
-        //      { r, g, b, a } → { r, g, b, max(r,g,b) }
         let colorMatrix = CIFilter.colorMatrix()
         colorMatrix.inputImage = diffOutput
 
@@ -71,9 +74,8 @@ private extension DifferingPixelCoordinatesTask {
 
         // アルファ値 = RGB の最大値（差分が大きいほど不透明）
         colorMatrix.aVector = CIVector(x: 1, y: 1, z: 1, w: 0)
-
         guard let transparentOutput = colorMatrix.outputImage else {
-            throw NSError(domain: "colormatrix", code: -2)
+            throw CreateImageTaskError.unexpectedError
         }
 
         // 3. CGImage 化
