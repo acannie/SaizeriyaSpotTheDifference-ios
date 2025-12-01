@@ -56,7 +56,7 @@ private extension AdjustOffsetTask {
     func findOptimalOffset(
         _ leftImage: UIImage,
         _ rightImage: UIImage,
-        sampleCount: Int = 100,
+        sampleCount: Int = 1000,
         offsetRange: ClosedRange<Int> = -30...30
     ) async throws -> ImageCoordinate {
         guard leftImage.size == rightImage.size else {
