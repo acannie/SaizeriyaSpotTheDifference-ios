@@ -86,6 +86,10 @@ struct RgbGrid {
         value[y][x]
     }
 
+    func pixel(_ coordinate: ImageCoordinate) -> Rgb {
+        value[coordinate.y][coordinate.x]
+    }
+
     func image() async throws -> UIImage? {
         // bitmap context の準備
         let size = CGSize(width: self.width, height: self.height)
