@@ -8,7 +8,7 @@
 import UIKit
 
 // 精度を確認するための仮実装
-struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
+struct DifferenceExtractionTask: CreateImageTaskExecutable {
     let headerText: String = "差分を検出中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
@@ -49,7 +49,7 @@ struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
     }
 }
 
-private extension DifferingPixelCoordinatesTask {
+private extension DifferenceExtractionTask {
     func getDifferenceCoordinates(
         _ leftImage: UIImage,
         _ rightImage: UIImage
