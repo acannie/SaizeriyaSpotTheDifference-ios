@@ -13,6 +13,7 @@ struct CheatResultScreenView: View {
     @ObservedObject private var viewModel: CheatResultScreenViewModel
     @State private var detectDifferencesTask: Task<Void, Never>?
     @State private var doubleImageSuiteSpacing: CGFloat = 0
+    @State private var showingLayerSide: Side = .left
     private let imageViewPadding: CGFloat = 10
     private var singleImageSuiteAreaSize: CGSize {
         let width = doubleImageSuiteAreaSize.width * 2
@@ -52,6 +53,8 @@ struct CheatResultScreenView: View {
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
                 doubleImageSuite(left: leftImage, right: rightImage)
+            case .differences:
+                EmptyView() // ここに辿り着くことはない
             }
             result
         }
@@ -137,10 +140,33 @@ private extension CheatResultScreenView {
     @ViewBuilder
     var result: some View {
         if let resultImage = viewModel.resultImage {
-            Image(uiImage: resultImage.baseImage)
-                .resizable()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(imageViewPadding)
+            ZStack {
+                Image(uiImage: resultImage.baseImage)
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(imageViewPadding)
+                ForEach(resultImage.leftImageDifferenceLayers, id: \.self) { layer in
+                    Image(uiImage: layer)
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(imageViewPadding)
+                        .opacity(showingLayerSide.isLeft ? 1 : 0)
+                }
+                ForEach(resultImage.rightImageDifferenceLayers, id: \.self) { layer in
+                    Image(uiImage: layer)
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(imageViewPadding)
+                        .opacity(showingLayerSide.isLeft ? 0 : 1)
+                }
+            }
+            .animation(
+                .easeInOut(duration: 0.5).delay(0.5).repeatForever(autoreverses: true),
+                value: showingLayerSide
+            )
+            .onAppear {
+                showingLayerSide = .right
+            }
         } else {
             Rectangle()
                 .fill(.gray)

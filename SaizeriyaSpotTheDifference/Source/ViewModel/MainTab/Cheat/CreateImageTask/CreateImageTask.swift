@@ -14,9 +14,7 @@ enum CreateImageTask: CaseIterable {
     case reduction
     case posterize
     case splitAndResize
-//    case takeEffects
-//    case colorClustering
-//    case differingPixelCoordinates
+    case differenceExtractionTask
 
     func executable(
         layoutHeight: LayoutHeight,
@@ -38,12 +36,8 @@ enum CreateImageTask: CaseIterable {
             PosterizeTask()
         case .splitAndResize:
             SplitAndResizeTask()
-//        case .takeEffects:
-//            TakeEffectsTask()
-//        case .colorClustering:
-//            ColorClusteringTask()
-//        case .differingPixelCoordinates:
-//            DifferingPixelCoordinatesTask()
+        case .differenceExtractionTask:
+            DifferenceExtractionTask()
         }
     }
 
