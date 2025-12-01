@@ -18,4 +18,11 @@ struct Rgb {
         let b255 = Int(self.b * 255)
         return String(format: "#%02X%02X%02X", r255, g255, b255)
     }
+
+    func distance(from otherRgb: Rgb) -> CGFloat {
+        let r2 = pow(self.r - otherRgb.r, 2)
+        let g2 = pow(self.g - otherRgb.g, 2)
+        let b2 = pow(self.b - otherRgb.b, 2)
+        return sqrt(r2 + g2 + b2)
+    }
 }

@@ -12,5 +12,5 @@ enum ImagePayload: Hashable {
     case photosPickerItem(PhotosPickerItem)
     case single(UIImage)
     case double(left: UIImage, right: UIImage)
-    case differences([ImageCoordinate])
+    case differences(Set<ImageCoordinate>)
 }

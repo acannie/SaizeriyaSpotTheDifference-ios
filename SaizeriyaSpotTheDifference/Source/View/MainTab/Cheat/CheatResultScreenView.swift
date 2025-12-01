@@ -139,10 +139,27 @@ private extension CheatResultScreenView {
     @ViewBuilder
     var result: some View {
         if let resultImage = viewModel.resultImage {
-            Image(uiImage: resultImage.baseImage)
-                .resizable()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(imageViewPadding)
+            ZStack {
+                Image(uiImage: resultImage.baseImage)
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(imageViewPadding)
+                Rectangle()
+                    .foregroundStyle(.white.opacity(0.5))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ForEach(resultImage.leftImageDifferenceLayers, id: \.self) { layer in
+                    Image(uiImage: layer)
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(imageViewPadding)
+                }
+                ForEach(resultImage.rightImageDifferenceLayers, id: \.self) { layer in
+                    Image(uiImage: layer)
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(imageViewPadding)
+                }
+            }
         } else {
             Rectangle()
                 .fill(.gray)
