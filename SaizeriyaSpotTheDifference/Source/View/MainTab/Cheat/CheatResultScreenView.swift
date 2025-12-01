@@ -52,6 +52,8 @@ struct CheatResultScreenView: View {
                 singleImageSuite(image)
             case .double(let leftImage, let rightImage):
                 doubleImageSuite(left: leftImage, right: rightImage)
+            case .differences:
+                EmptyView() // ここに辿り着くことはない
             }
             result
         }

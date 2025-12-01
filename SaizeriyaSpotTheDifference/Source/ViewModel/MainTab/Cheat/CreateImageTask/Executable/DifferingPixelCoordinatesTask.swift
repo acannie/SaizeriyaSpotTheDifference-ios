@@ -33,10 +33,10 @@ struct DifferingPixelCoordinatesTask: CreateImageTaskExecutable {
         let baseImage = leftPreviewImage
 
         return .init(
-            processing: .single(diffImage1),
+            processing: .differences([]),
             preview: imageSuite.preview,
             result: .init(
-                baseImage: diffImage1,
+                baseImage: baseImage,
                 leftImageDifferenceLayers: [],
                 rightImageDifferenceLayers: []
             )
