@@ -59,7 +59,7 @@ private extension DifferenceExtractionTask {
                 let leftImagePixelColor = leftRgbGrid.pixel(x, y)
                 let rightImagePixelColor = rightRgbGrid.pixel(x, y)
 
-                if leftImagePixelColor.distance(from: rightImagePixelColor) > 0.1 { // FIXME: 閾値調整
+                if leftImagePixelColor.labDistance(from: rightImagePixelColor) > 0.5 { // FIXME: 閾値調整
                     differentCoordinates.insert(.init(x: x, y: y))
                 }
             }

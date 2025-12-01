@@ -91,7 +91,7 @@ private extension AdjustOffsetTask {
                        0 < leftImageCoordinate.y, leftImageCoordinate.y < imageHeight {
                         let leftRgb = leftRgbGrid.pixel(leftImageCoordinate)
                         let rightRgb = rightRgbGrid.pixel(rightImageCoordinates)
-                        diffSum += leftRgb.distance(from: rightRgb)
+                        diffSum += leftRgb.labDistance(from: rightRgb)
                         targetCount += 1
                     } else {
                         break
