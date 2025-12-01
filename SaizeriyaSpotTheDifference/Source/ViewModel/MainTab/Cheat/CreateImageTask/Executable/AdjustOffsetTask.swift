@@ -25,38 +25,22 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
             width: imageSize.width - CGFloat(abs(optimalOffset.x)),
             height: imageSize.height - CGFloat(abs(optimalOffset.y)),
         )
-        guard let optimizedProcessingLeft = left.cropping(
-                to: .init(
-                        x: optimalOffset.x > 0 ? 0 : CGFloat(optimalOffset.x),
-                        y: optimalOffset.y > 0 ? 0 : CGFloat(optimalOffset.y),
-                        width: newImageSize.width,
-                        height: newImageSize.height
-                    )
-                ),
-                let optimizedProcessingRight = right.cropping(
-                    to: .init(
-                        x: optimalOffset.x > 0 ? CGFloat(optimalOffset.x) : 0,
-                        y: optimalOffset.y > 0 ? CGFloat(optimalOffset.y) : 0,
-                        width: newImageSize.width,
-                        height: newImageSize.height
-                    )
-                ),
-                let optimizedPreviewLeft = previewLeft.cropping(
-                    to: .init(
-                        x: optimalOffset.x > 0 ? 0 : CGFloat(optimalOffset.x),
-                        y: optimalOffset.y > 0 ? 0 : CGFloat(optimalOffset.y),
-                        width: newImageSize.width,
-                        height: newImageSize.height
-                    )
-                ),
-                let optimizedPreviewRight = previewRight.cropping(
-                    to: .init(
-                        x: optimalOffset.x > 0 ? CGFloat(optimalOffset.x) : 0,
-                        y: optimalOffset.y > 0 ? CGFloat(optimalOffset.y) : 0,
-                        width: newImageSize.width,
-                        height: newImageSize.height
-                    )
-                ) else {
+        let leftImageCropRect = CGRect(
+            x: optimalOffset.x > 0 ? CGFloat(optimalOffset.x) : 0,
+            y: optimalOffset.y > 0 ? CGFloat(optimalOffset.y) : 0,
+            width: newImageSize.width,
+            height: newImageSize.height
+        )
+        let rightImageCropRect = CGRect(
+            x: optimalOffset.x > 0 ? 0 : -CGFloat(optimalOffset.x),
+            y: optimalOffset.y > 0 ? 0 : -CGFloat(optimalOffset.y),
+            width: newImageSize.width,
+            height: newImageSize.height
+        )
+        guard let optimizedProcessingLeft = left.cropping(to: leftImageCropRect),
+              let optimizedProcessingRight = right.cropping(to: rightImageCropRect),
+              let optimizedPreviewLeft = previewLeft.cropping(to: leftImageCropRect),
+              let optimizedPreviewRight = previewRight.cropping(to: rightImageCropRect) else {
             throw CreateImageTaskError.unexpectedError
         }
 
@@ -100,11 +84,11 @@ private extension AdjustOffsetTask {
                 var targetCount: Int = 0
 
                 for coordinate in randomImageCoordinates {
-                    let leftImageCoordinate = coordinate
-                    let rightImageCoordinates = coordinate.add(offset)
+                    let leftImageCoordinate = coordinate.add(offset)
+                    let rightImageCoordinates = coordinate
 
-                    if 0 < rightImageCoordinates.x, rightImageCoordinates.x < imageWidth,
-                       0 < rightImageCoordinates.y, rightImageCoordinates.y < imageHeight {
+                    if 0 < leftImageCoordinate.x, leftImageCoordinate.x < imageWidth,
+                       0 < leftImageCoordinate.y, leftImageCoordinate.y < imageHeight {
                         let leftRgb = leftRgbGrid.pixel(leftImageCoordinate)
                         let rightRgb = rightRgbGrid.pixel(rightImageCoordinates)
                         diffSum += leftRgb.distance(from: rightRgb)
