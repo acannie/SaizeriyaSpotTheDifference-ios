@@ -75,13 +75,12 @@ private extension AdjustOffsetTask {
         }
 
         // 差分が最小となるオフセットを探索する
-        var minDiffAverage: CGFloat = .infinity
+        var minDiffCount: Int = sampleCount
         var optimalOffset: ImageCoordinate = .init(x: 0, y: 0)
         for y in offsetRange {
             for x in offsetRange {
                 let offset = ImageCoordinate(x: x, y: y)
-                var diffSum: CGFloat = 0
-                var targetCount: Int = 0
+                var diffCount = 0
 
                 for coordinate in randomImageCoordinates {
                     let leftImageCoordinate = coordinate.add(offset)
@@ -91,16 +90,14 @@ private extension AdjustOffsetTask {
                        0 < leftImageCoordinate.y, leftImageCoordinate.y < imageHeight {
                         let leftRgb = leftRgbGrid.pixel(leftImageCoordinate)
                         let rightRgb = rightRgbGrid.pixel(rightImageCoordinates)
-                        diffSum += leftRgb.labDistance(from: rightRgb)
-                        targetCount += 1
-                    } else {
-                        break
+                        if leftRgb.labDistance(from: rightRgb) > 0.2 { // 後続タスクの基準と合わせる
+                            diffCount += 1
+                        }
                     }
                 }
 
-                let diffAverage = diffSum / Double(targetCount)
-                if diffAverage < minDiffAverage {
-                    minDiffAverage = diffAverage
+                if diffCount < minDiffCount {
+                    minDiffCount = diffCount
                     optimalOffset = offset
                 }
             }
