@@ -8,4 +8,11 @@
 struct ImageCoordinate: Hashable {
     let x: Int
     let y: Int
+
+    func add(_ coordinate: ImageCoordinate) -> ImageCoordinate {
+        .init(
+            x: self.x + coordinate.x,
+            y: self.y + coordinate.y
+        )
+    }
 }

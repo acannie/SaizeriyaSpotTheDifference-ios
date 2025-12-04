@@ -25,4 +25,10 @@ struct Rgb {
         let b2 = pow(self.b - otherRgb.b, 2)
         return sqrt(r2 + g2 + b2)
     }
+
+    func labDistance(from other: Rgb) -> CGFloat {
+        let lab = Lab(self)
+        let otherLab = Lab(other)
+        return lab.deltaE(from: otherLab)
+    }
 }
