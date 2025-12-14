@@ -164,6 +164,10 @@ private extension CheatResultScreenView {
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(imageViewPadding)
+                Rectangle()
+                    .foregroundStyle(.resultImageFilter)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(imageViewPadding)
                 ForEach(resultImage.leftImageDifferenceLayers, id: \.self) { layer in
                     Image(decorative: layer, scale: 1.0, orientation: .up)
                         .resizable()
