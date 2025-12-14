@@ -29,8 +29,8 @@ struct ClipImageTask: CreateImageTaskExecutable {
         )
 
         return .init(
-            processing: .single(.cgImage(cgImage)),
-            preview: .single(.cgImage(cgImage)),
+            processing: .single(.cg(cgImage)),
+            preview: .single(.cg(cgImage)),
             result: nil
         )
     }

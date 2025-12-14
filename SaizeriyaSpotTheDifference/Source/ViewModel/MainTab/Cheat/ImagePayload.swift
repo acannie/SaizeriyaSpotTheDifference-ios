@@ -12,7 +12,7 @@ enum ImagePayload: Hashable {
     case photosPickerItem(PhotosPickerItem)
     case single(Image)
     case pair(ImagePair)
-    case differences(Set<ImageCoordinate>)
+    case differenceMask(Set<PixelCoordinate>)
 
     enum Image: Hashable {
         case cg(CGImage)

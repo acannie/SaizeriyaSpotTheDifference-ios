@@ -61,7 +61,7 @@ private extension AdjustOffsetTask {
         _ rightImage: CGImage,
         sampleCount: Int = 1000,
         offsetRange: ClosedRange<Int> = -30...30
-    ) async throws -> ImageCoordinate {
+    ) async throws -> PixelCoordinate {
         guard
             leftImage.width == rightImage.width,
             leftImage.height == rightImage.height else {
@@ -72,7 +72,7 @@ private extension AdjustOffsetTask {
         let leftRgbGrid = try await RgbGrid(leftImage)
         let rightRgbGrid = try await RgbGrid(rightImage)
 
-        let randomImageCoordinates: [ImageCoordinate] = (0..<sampleCount).map { _ in
+        let randomImageCoordinates: [PixelCoordinate] = (0..<sampleCount).map { _ in
             .init(
                 x: Int.random(in: 0..<imageWidth),
                 y: Int.random(in: 0..<imageHeight)
@@ -81,10 +81,10 @@ private extension AdjustOffsetTask {
 
         // 差分が最小となるオフセットを探索する
         var minDiffCount: Int = sampleCount
-        var optimalOffset: ImageCoordinate = .init(x: 0, y: 0)
+        var optimalOffset: PixelCoordinate = .init(x: 0, y: 0)
         for y in offsetRange {
             for x in offsetRange {
-                let offset = ImageCoordinate(x: x, y: y)
+                let offset = PixelCoordinate(x: x, y: y)
                 var diffCount = 0
 
                 for coordinate in randomImageCoordinates {

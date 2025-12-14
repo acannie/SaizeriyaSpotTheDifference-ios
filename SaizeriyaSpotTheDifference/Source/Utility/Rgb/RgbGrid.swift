@@ -82,7 +82,7 @@ struct RgbGrid {
         value[y][x]
     }
 
-    func pixel(_ coordinate: ImageCoordinate) -> Rgb {
+    func pixel(_ coordinate: PixelCoordinate) -> Rgb {
         value[coordinate.y][coordinate.x]
     }
 

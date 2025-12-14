@@ -27,8 +27,8 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
         ciImage = ciImage.perspectiveCorrect(rect: detectedRect)
 
         return .init(
-            processing: .single(.ciImage(ciImage)),
-            preview: .single(.ciImage(ciImage)),
+            processing: .single(.ci(ciImage)),
+            preview: .single(.ci(ciImage)),
             result: nil
         )
     }

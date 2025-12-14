@@ -51,20 +51,20 @@ struct CheatResultScreenView: View {
                 photosPickerItemImageSuite
             case .single(let image):
                 switch image {
-                case .cgImage(let cgImage):
+                case .cg(let cgImage):
                     singleImageSuite(cgImage)
-                case .ciImage(let ciImage):
+                case .ci(let ciImage):
                     if let cgImage = viewModel.convertToCgImage(from: ciImage) {
                         singleImageSuite(cgImage)
                     } else {
                         Text("表示に失敗しました")
                     }
                 }
-            case .double(let imagePair):
+            case .pair(let imagePair):
                 switch imagePair {
-                case .cgImagePair(let leftCgImage, let rightCgImage):
+                case .cg(let leftCgImage, let rightCgImage):
                     doubleImageSuite(left: leftCgImage, right: rightCgImage)
-                case .ciImagePair(let leftCiImage, let rightCiImage):
+                case .ci(let leftCiImage, let rightCiImage):
                     if let leftCgImage = viewModel.convertToCgImage(from: leftCiImage),
                        let rightCgImage = viewModel.convertToCgImage(from: rightCiImage) {
                         doubleImageSuite(left: leftCgImage, right: rightCgImage)
@@ -72,7 +72,7 @@ struct CheatResultScreenView: View {
                         Text("表示に失敗しました")
                     }
                 }
-            case .differences:
+            case .differenceMask:
                 EmptyView() // ここに辿り着くことはない
             }
             result
