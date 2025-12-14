@@ -14,9 +14,10 @@ struct ClipImageTask: CreateImageTaskExecutable {
     var headerText: String = "撮影範囲を計算中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .singleCgImage(var cgImage) = imageSuite.processing else {
+        guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
+        var cgImage = try getCgImage(from: image)
 
         // プレビューと画像のサイズ比率
         let scale = CGFloat(cgImage.width) / UIScreen.main.bounds.width
@@ -28,8 +29,8 @@ struct ClipImageTask: CreateImageTaskExecutable {
         )
 
         return .init(
-            processing: .singleCgImage(cgImage),
-            preview: .singleCgImage(cgImage),
+            processing: .single(.cgImage(cgImage)),
+            preview: .single(.cgImage(cgImage)),
             result: nil
         )
     }

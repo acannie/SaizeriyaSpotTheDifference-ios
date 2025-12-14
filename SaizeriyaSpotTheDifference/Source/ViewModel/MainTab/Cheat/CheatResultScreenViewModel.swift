@@ -61,6 +61,14 @@ final class CheatResultScreenViewModel: ObservableObject {
             self.resultImage = resultImage
         }
     }
+
+    func convertToCgImage(from ciImage: CIImage) -> CGImage? {
+        do {
+            return try ciImage.createCgImage()
+        } catch {
+            return nil
+        }
+    }
 }
 
 private extension CheatResultScreenViewModel {

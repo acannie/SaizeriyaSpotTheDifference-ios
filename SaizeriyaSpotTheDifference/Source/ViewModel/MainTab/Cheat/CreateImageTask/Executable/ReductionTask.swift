@@ -13,15 +13,16 @@ struct ReductionTask: CreateImageTaskExecutable {
     let headerText: String = "画像サイズを調整中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .singleCiImage(var ciImage) = imageSuite.processing else {
+        guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
+        var ciImage = try getCiImage(from: image)
 
         ciImage = ciImage.reduction(targetHeight: 300)
 
         return .init(
-            processing: .singleCiImage(ciImage),
-            preview: .singleCiImage(ciImage),
+            processing: .single(.ci(ciImage)),
+            preview: .single(.ci(ciImage)),
             result: nil
         )
     }

@@ -20,8 +20,8 @@ struct LoadTransferableTask: CreateImageTaskExecutable {
         let cgImage = try await cgImage(from: photosPickerItem)
 
         return .init(
-            processing: .singleCgImage(cgImage),
-            preview: .singleCgImage(cgImage),
+            processing: .single(.cg(cgImage)),
+            preview: .single(.cg(cgImage)),
             result: nil
         )
     }

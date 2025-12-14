@@ -11,10 +11,12 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
     let headerText: String = "位置を調整中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .doubleCgImage(let leftCgImage, let rightCgImage) = imageSuite.processing,
-              case .doubleCgImage(let previewLeftCgImage, let previewRightCgImage) = imageSuite.preview else {
+        guard case .pair(let imagePair) = imageSuite.processing,
+              case .pair(let previewImagePair) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
+        let (leftCgImage, rightCgImage) = try getCgImagePair(from: imagePair)
+        let (previewLeftCgImage, previewRightCgImage) = try getCgImagePair(from: previewImagePair)
 
         // 最適なオフセットを探索
         let optimalOffset = try await findOptimalOffset(leftCgImage, rightCgImage)
@@ -46,8 +48,8 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
         }
 
         return .init(
-            processing: .doubleCgImage(left: optimizedProcessingLeft, right: optimizedProcessingRight),
-            preview: .doubleCgImage(left: optimizedPreviewLeft, right: optimizedPreviewRight),
+            processing: .pair(.cg(optimizedProcessingLeft, optimizedProcessingRight)),
+            preview: .pair(.cg(optimizedPreviewLeft, optimizedPreviewRight)),
             result: nil
         )
     }

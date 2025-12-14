@@ -10,9 +10,17 @@ import _PhotosUI_SwiftUI
 
 enum ImagePayload: Hashable {
     case photosPickerItem(PhotosPickerItem)
-    case singleCiImage(CIImage)
-    case singleCgImage(CGImage)
-    case doubleCiImage(left: CIImage, right: CIImage)
-    case doubleCgImage(left: CGImage, right: CGImage)
+    case single(Image)
+    case pair(ImagePair)
     case differences(Set<ImageCoordinate>)
+
+    enum Image: Hashable {
+        case cg(CGImage)
+        case ci(CIImage)
+    }
+
+    enum ImagePair: Hashable {
+        case cg(CGImage, CGImage)
+        case ci(CIImage, CIImage)
+    }
 }

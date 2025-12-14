@@ -12,10 +12,12 @@ struct DifferenceExtractionTask: CreateImageTaskExecutable {
     let headerText: String = "差分を検出中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .doubleCgImage(let leftCgImage, let rightCgImage) = imageSuite.processing,
-              case .doubleCgImage(let previewLeftCgImage, let previewRightCgImage) = imageSuite.preview else {
+        guard case .double(let imagePair) = imageSuite.processing,
+              case .double(let previewImagePair) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
+        let (leftCgImage, rightCgImage) = try getCgImagePair(from: imagePair)
+        let (previewLeftCgImage, previewRightCgImage) = try getCgImagePair(from: previewImagePair)
 
         // 差分を抽出
         let differenceCoordinates: Set<ImageCoordinate> = try await getDifferenceCoordinates(leftCgImage, rightCgImage)
@@ -23,10 +25,10 @@ struct DifferenceExtractionTask: CreateImageTaskExecutable {
         let differencesOnRightImage = try await previewRightCgImage.extractPixels(at: differenceCoordinates)
 
         // ResultPayloadを作成
-        guard case .doubleCgImage(let leftPreviewImage, _) = imageSuite.preview else {
+        guard case .double(let previewImage) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
-        let baseImage = leftPreviewImage
+        let baseImage = previewLeftCgImage
 
         return .init(
             processing: .differences(differenceCoordinates),

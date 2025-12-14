@@ -11,9 +11,10 @@ struct PosterizeTask: CreateImageTaskExecutable {
     let headerText: String = "ポスタライズ加工中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .singleCiImage(var ciImage) = imageSuite.processing else {
+        guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
+        var ciImage = try getCiImage(from: image)
 
         // ポスタライズ処理
         ciImage = try await ciImage.posterize()
@@ -23,7 +24,7 @@ struct PosterizeTask: CreateImageTaskExecutable {
         ciImage = try await ciImage.palettize(paletteImage: palette.settingAlphaOne(in: palette.extent))
 
         return .init(
-            processing: .singleCiImage(ciImage),
+            processing: .single(.ci(ciImage)),
             preview: imageSuite.preview,
             result: nil
         )

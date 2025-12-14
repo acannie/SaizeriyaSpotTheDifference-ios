@@ -49,17 +49,28 @@ struct CheatResultScreenView: View {
             switch viewModel.imageSuite.preview {
             case .photosPickerItem:
                 photosPickerItemImageSuite
-            case .singleCgImage(let cgImage):
-                singleImageSuite(cgImage)
-            case .singleCiImage(let ciImage):
-                if let cgImage = ciImage.makeCgImage() {
+            case .single(let image):
+                switch image {
+                case .cgImage(let cgImage):
                     singleImageSuite(cgImage)
+                case .ciImage(let ciImage):
+                    if let cgImage = viewModel.convertToCgImage(from: ciImage) {
+                        singleImageSuite(cgImage)
+                    } else {
+                        Text("表示に失敗しました")
+                    }
                 }
-            case .doubleCgImage(let leftCgImage, let rightCgImage):
-                doubleImageSuite(left: leftCgImage, right: rightCgImage)
-            case .doubleCiImage(let leftCiImage, let rightCiImage):
-                if let leftCgImage = leftCiImage.makeCgImage(), let rightCgImage = rightCiImage.makeCgImage() {
+            case .double(let imagePair):
+                switch imagePair {
+                case .cgImagePair(let leftCgImage, let rightCgImage):
                     doubleImageSuite(left: leftCgImage, right: rightCgImage)
+                case .ciImagePair(let leftCiImage, let rightCiImage):
+                    if let leftCgImage = viewModel.convertToCgImage(from: leftCiImage),
+                       let rightCgImage = viewModel.convertToCgImage(from: rightCiImage) {
+                        doubleImageSuite(left: leftCgImage, right: rightCgImage)
+                    } else {
+                        Text("表示に失敗しました")
+                    }
                 }
             case .differences:
                 EmptyView() // ここに辿り着くことはない
@@ -181,16 +192,5 @@ private extension CheatResultScreenView {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(imageViewPadding)
         }
-    }
-}
-
-private extension CIImage {
-    func makeCgImage() -> CGImage? {
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(self, from: self.extent) else {
-            print("error")
-            return nil
-        }
-        return cgImage
     }
 }
