@@ -17,7 +17,7 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
         guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
-        var cgImage = try getCgImage(from: image)
+        let cgImage = try getCgImage(from: image)
 
         // メニューブックの輪郭を特定
         let detectedRect = try await cgImage.detectRect()
