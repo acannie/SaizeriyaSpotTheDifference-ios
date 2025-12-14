@@ -25,13 +25,11 @@ struct DifferenceExtractionTask: CreateImageTaskExecutable {
         let differencesOnRightImage = try await previewRightCgImage.extractPixels(at: differenceCoordinates)
 
         // ResultPayloadを作成
-        guard case .pair(let previewImage) = imageSuite.preview else {
-            throw CreateImageTaskError.unexpectedError
-        }
+        let mask = ImageMask(coordinates: differenceCoordinates)
         let baseImage = previewLeftCgImage
 
         return .init(
-            processing: .differenceMask(differenceCoordinates),
+            processing: .differenceMask(mask),
             preview: imageSuite.preview,
             result: .init(
                 baseImage: baseImage,
