@@ -73,13 +73,22 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         guard
             let data = photo.fileDataRepresentation(),
             let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
-            let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil)
+            let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil),
+            let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+            let orientationRaw = properties[kCGImagePropertyOrientation] as? UInt32,
+            let orientation = CGImagePropertyOrientation(rawValue: orientationRaw)
         else {
             return
         }
 
+        let ciImage = CIImage(cgImage: cgImage)
+            .oriented(orientation)
+        let context = CIContext()
+        guard let fixedCGImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+            return
+        }
         DispatchQueue.main.async {
-            self.capturedImage = cgImage
+            self.capturedImage = fixedCGImage
         }
     }
 }
