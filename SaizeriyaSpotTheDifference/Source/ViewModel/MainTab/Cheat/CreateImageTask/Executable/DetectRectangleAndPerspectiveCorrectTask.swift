@@ -14,32 +14,21 @@ struct DetectRectangleAndPerspectiveCorrectTask: CreateImageTaskExecutable {
     let headerText: String = "間違い探しを検出中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite.processing,
-              let cgImage = uiImage.cgImage else {
+        guard case .single(let image) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
-
-        // 画像の形式変換
-        let context = CIContext()
-        let ciImage = CIImage(cgImage: cgImage)
+        let cgImage = try getCgImage(from: image)
 
         // メニューブックの輪郭を特定
         let detectedRect = try await cgImage.detectRect()
 
         // 矩形補正
-        let perspectiveCorrectedCiImage = ciImage.perspectiveCorrect(rect: detectedRect)
-        let perspectiveCorrectedCgImage = try perspectiveCorrectedCiImage.createCgImage(with: context)
-
-        // 返却値の作成
-        let resultImage = UIImage(
-            cgImage: perspectiveCorrectedCgImage,
-            scale: uiImage.scale,
-            orientation: uiImage.imageOrientation
-        )
+        var ciImage = CIImage(cgImage: cgImage)
+        ciImage = ciImage.perspectiveCorrect(rect: detectedRect)
 
         return .init(
-            processing: .single(resultImage),
-            preview: .single(resultImage),
+            processing: .single(.ci(ciImage)),
+            preview: .single(.ci(ciImage)),
             result: nil
         )
     }
@@ -85,23 +74,6 @@ private extension CGImage {
 }
 
 private extension CIImage {
-    /// エッジを強調
-    func emphasizeEdge() -> CIImage {
-        // エッジ抽出
-        let edges = CIFilter(name: "CIEdges")!
-        edges.setDefaults()
-        edges.setValue(self, forKey: kCIInputImageKey)
-        let edgeImage = edges.outputImage!
-
-        // 形態学的膨張で線を太らせる
-        let dilate = CIFilter(name: "CIMorphologyMaximum")!
-        dilate.setValue(edgeImage, forKey: kCIInputImageKey)
-        dilate.setValue(5.0, forKey: "inputRadius")
-        let dilateImage = dilate.outputImage!
-
-        return dilateImage
-    }
-
     /// 矩形補正
     func perspectiveCorrect(rect: Rect) -> CIImage {
         let filter = CIFilter.perspectiveCorrection()
@@ -110,24 +82,6 @@ private extension CIImage {
         filter.topRight = rect.topRight
         filter.bottomLeft = rect.bottomLeft
         filter.bottomRight = rect.bottomRight
-
-        return filter.outputImage!
-    }
-
-    /// グレースケール
-    func grayscale() -> CIImage {
-        let filter = CIFilter.colorControls()
-        filter.inputImage = self
-        filter.saturation = 0
-
-        return filter.outputImage!
-    }
-
-    /// コントラスト強調
-    func highContrast() -> CIImage {
-        let filter = CIFilter.colorControls()
-        filter.inputImage = self
-        filter.contrast = 1.4
 
         return filter.outputImage!
     }

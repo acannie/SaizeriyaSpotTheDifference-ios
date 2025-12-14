@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
-    @Published private(set) var capturedImage: UIImage?
+    @Published private(set) var capturedImage: CGImage?
 
     let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
@@ -68,13 +68,27 @@ class CameraManager: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        guard let data = photo.fileDataRepresentation(),
-              let image = UIImage(data: data) else {
+        guard error == nil else { return }
+
+        guard
+            let data = photo.fileDataRepresentation(),
+            let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
+            let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil),
+            let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+            let orientationRaw = properties[kCGImagePropertyOrientation] as? UInt32,
+            let orientation = CGImagePropertyOrientation(rawValue: orientationRaw)
+        else {
             return
         }
 
-        Task { @MainActor in
-            self.capturedImage = image
+        let ciImage = CIImage(cgImage: cgImage)
+            .oriented(orientation)
+        let context = CIContext()
+        guard let fixedCGImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+            return
+        }
+        DispatchQueue.main.async {
+            self.capturedImage = fixedCGImage
         }
     }
 }

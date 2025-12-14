@@ -10,61 +10,46 @@ import CoreImage
 protocol CreateImageTaskExecutable {
     var headerText: String { get }
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite
-    func ciImageToRGBA8(
-        _ ciImage: CIImage,
-        context: CIContext,
-        targetSize: CGSize?
-    ) -> (
-        data: [UInt8],
-        width: Int,
-        height: Int
-    )?
+    func getCgImage(from imageFormat: ImagePayload.Image) throws -> CGImage
+    func getCiImage(from imageFormat: ImagePayload.Image) throws -> CIImage
+    func getCgImagePair(from imagePairFormat: ImagePayload.ImagePair) throws -> (CGImage, CGImage)
+    func getCiImagePair(from imagePairFormat: ImagePayload.ImagePair) throws -> (CIImage, CIImage)
 }
 
 extension CreateImageTaskExecutable {
-    func ciImageToRGBA8(
-        _ ciImage: CIImage,
-        context: CIContext,
-        targetSize: CGSize? = nil
-    ) -> (
-        data: [UInt8],
-        width: Int,
-        height: Int
-    )? {
-        let image = if targetSize != nil {
-            ciImage.transformed(
-                by: CGAffineTransform(
-                    scaleX: targetSize!.width/ciImage.extent.width,
-                    y: targetSize!.height/ciImage.extent.height
-                )
-            )
-        } else {
+    func getCgImage(from imageFormat: ImagePayload.Image) throws -> CGImage {
+        switch imageFormat {
+        case .cg(let cgImage):
+            cgImage
+        case .ci(let ciImage):
+            try ciImage.createCgImage()
+        }
+    }
+
+    func getCiImage(from imageFormat: ImagePayload.Image) throws -> CIImage {
+        switch imageFormat {
+        case .cg(let cgImage):
+            CIImage(cgImage: cgImage)
+        case .ci(let ciImage):
             ciImage
         }
-        let width = Int(image.extent.width)
-        let height = Int(image.extent.height)
-        let rowBytes = width * 4
-        var pixelData = [UInt8](repeating: 0, count: rowBytes * height)
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+    }
 
-        guard let cgImage = CIContext(options: nil).createCGImage(image, from: image.extent),
-              let context = CGContext(
-            data: &pixelData,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: rowBytes,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo
-        ) else {
-            return nil
+    func getCgImagePair(from imagePairFormat: ImagePayload.ImagePair) throws -> (CGImage, CGImage) {
+        switch imagePairFormat {
+        case .cg(let cgImageLeft, let cgImageRight):
+            (cgImageLeft, cgImageRight)
+        case .ci(let ciImageLeft, let ciImageRight):
+            (try ciImageLeft.createCgImage(), try ciImageRight.createCgImage())
         }
+    }
 
-        context.draw(
-            cgImage,
-            in: CGRect(x: 0, y: 0, width: width, height: height)
-        )
-        return (pixelData, width, height)
+    func getCiImagePair(from imagePairFormat: ImagePayload.ImagePair) throws -> (CIImage, CIImage) {
+        switch imagePairFormat {
+        case .cg(let cgImageLeft, let cgImageRight):
+            (CIImage(cgImage: cgImageLeft), CIImage(cgImage: cgImageRight))
+        case .ci(let ciImageLeft, let ciImageRight):
+            (ciImageLeft, ciImageRight)
+        }
     }
 }

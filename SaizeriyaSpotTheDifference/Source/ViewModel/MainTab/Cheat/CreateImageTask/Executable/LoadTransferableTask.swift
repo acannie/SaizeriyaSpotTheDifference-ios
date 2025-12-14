@@ -17,15 +17,32 @@ struct LoadTransferableTask: CreateImageTaskExecutable {
             throw CreateImageTaskError.unexpectedError
         }
 
-        guard let data = try await photosPickerItem.loadTransferable(type: Data.self),
-              let uiImage = UIImage(data: data) else {
+        let cgImage = try await cgImage(from: photosPickerItem)
+
+        return .init(
+            processing: .single(.cg(cgImage)),
+            preview: .single(.cg(cgImage)),
+            result: nil
+        )
+    }
+}
+
+private extension LoadTransferableTask {
+    func cgImage(from item: PhotosPickerItem) async throws -> CGImage {
+        guard let data = try await item.loadTransferable(type: Data.self) else {
             throw CreateImageTaskError.couldnotReadImageData
         }
 
-        return .init(
-            processing: .single(uiImage),
-            preview: .single(uiImage),
-            result: nil
-        )
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            throw CreateImageTaskError.couldnotReadImageData
+        }
+
+        guard let cgImage = CGImageSourceCreateImageAtIndex(source, 0, [
+            kCGImageSourceShouldCache: true
+        ] as CFDictionary) else {
+            throw CreateImageTaskError.couldnotReadImageData
+        }
+
+        return cgImage
     }
 }

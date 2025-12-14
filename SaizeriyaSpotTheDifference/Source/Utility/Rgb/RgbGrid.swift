@@ -29,11 +29,7 @@ struct RgbGrid {
         self.height = value.count
     }
 
-    init(_ uiImage: UIImage) async throws {
-        guard let cgImage = uiImage.cgImage,
-              let data = cgImage.dataProvider?.data else {
-            throw RgbGridError.unexpectedError
-        }
+    init(_ cgImage: CGImage) async throws {
         let width = cgImage.width
         let height = cgImage.height
         let bytesPerPixel = 4
@@ -86,35 +82,51 @@ struct RgbGrid {
         value[y][x]
     }
 
-    func pixel(_ coordinate: ImageCoordinate) -> Rgb {
+    func pixel(_ coordinate: PixelCoordinate) -> Rgb {
         value[coordinate.y][coordinate.x]
     }
 
-    func image() async throws -> UIImage? {
-        // bitmap context の準備
-        let size = CGSize(width: self.width, height: self.height)
-        UIGraphicsBeginImageContext(size)
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return UIImage()
+    func makeCGImage() throws -> CGImage {
+        let height = value.count
+        guard height > 0 else {
+            throw RgbGridError.unexpectedError
         }
+        let width = value[0].count
 
-        // contextの各ピクセルに色をセット
-        for (pixelY, row) in value.enumerated() {
-            for (pixelX, color) in row.enumerated() {
-                context.setFillColor(UIColor(
-                    red: color.r,
-                    green: color.g,
-                    blue: color.b,
-                    alpha: 1.0
-                ).cgColor)
-                context.fill(CGRect(x: pixelX, y: pixelY, width: 1, height: 1))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let bitsPerComponent = 8
+
+        var data = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let rgb = value[y][x]
+                let offset = y * bytesPerRow + x * bytesPerPixel
+
+                data[offset + 0] = UInt8(clamping: Int(rgb.r * 255))
+                data[offset + 1] = UInt8(clamping: Int(rgb.g * 255))
+                data[offset + 2] = UInt8(clamping: Int(rgb.b * 255))
+                data[offset + 3] = 255 // alpha
             }
         }
 
-        // contextから画像を生成
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: &data,
+            width: width,
+            height: height,
+            bitsPerComponent: bitsPerComponent,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            throw RgbGridError.unexpectedError
+        }
 
-        return image ?? UIImage()
+        guard let cgImage = context.makeImage() else {
+            throw RgbGridError.unexpectedError
+        }
+        return cgImage
     }
 }

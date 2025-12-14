@@ -50,10 +50,29 @@ struct CheatResultScreenView: View {
             case .photosPickerItem:
                 photosPickerItemImageSuite
             case .single(let image):
-                singleImageSuite(image)
-            case .double(let leftImage, let rightImage):
-                doubleImageSuite(left: leftImage, right: rightImage)
-            case .differences:
+                switch image {
+                case .cg(let cgImage):
+                    singleImageSuite(cgImage)
+                case .ci(let ciImage):
+                    if let cgImage = viewModel.convertToCgImage(from: ciImage) {
+                        singleImageSuite(cgImage)
+                    } else {
+                        Text("表示に失敗しました")
+                    }
+                }
+            case .pair(let imagePair):
+                switch imagePair {
+                case .cg(let leftCgImage, let rightCgImage):
+                    doubleImageSuite(left: leftCgImage, right: rightCgImage)
+                case .ci(let leftCiImage, let rightCiImage):
+                    if let leftCgImage = viewModel.convertToCgImage(from: leftCiImage),
+                       let rightCgImage = viewModel.convertToCgImage(from: rightCiImage) {
+                        doubleImageSuite(left: leftCgImage, right: rightCgImage)
+                    } else {
+                        Text("表示に失敗しました")
+                    }
+                }
+            case .differenceMask:
                 EmptyView() // ここに辿り着くことはない
             }
             result
@@ -85,8 +104,8 @@ struct CheatResultScreenView: View {
 }
 
 private extension CheatResultScreenView {
-    func singleImageSuite(_ image: UIImage) -> some View {
-        Image(uiImage: image)
+    func singleImageSuite(_ cgImage: CGImage) -> some View {
+        Image(decorative: cgImage, scale: 1.0, orientation: .up)
             .resizable()
             .scaledToFit()
             .frame(
@@ -96,16 +115,16 @@ private extension CheatResultScreenView {
             .padding(.vertical, imageViewPadding)
     }
 
-    func doubleImageSuite(left leftImage: UIImage, right rightImage: UIImage) -> some View {
+    func doubleImageSuite(left leftImage: CGImage, right rightImage: CGImage) -> some View {
         HStack(spacing: doubleImageSuiteSpacing) {
-            Image(uiImage: leftImage)
+            Image(decorative: leftImage, scale: 1.0, orientation: .up)
                 .resizable()
                 .scaledToFit()
                 .frame(
                     maxWidth: doubleImageSuiteAreaSize.width,
                     maxHeight: doubleImageSuiteAreaSize.height
                 )
-            Image(uiImage: rightImage)
+            Image(decorative: rightImage, scale: 1.0, orientation: .up)
                 .resizable()
                 .scaledToFit()
                 .frame(
@@ -141,19 +160,19 @@ private extension CheatResultScreenView {
     var result: some View {
         if let resultImage = viewModel.resultImage {
             ZStack {
-                Image(uiImage: resultImage.baseImage)
+                Image(decorative: resultImage.baseImage, scale: 1.0, orientation: .up)
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(imageViewPadding)
                 ForEach(resultImage.leftImageDifferenceLayers, id: \.self) { layer in
-                    Image(uiImage: layer)
+                    Image(decorative: layer, scale: 1.0, orientation: .up)
                         .resizable()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding(imageViewPadding)
                         .opacity(showingLayerSide.isLeft ? 1 : 0)
                 }
                 ForEach(resultImage.rightImageDifferenceLayers, id: \.self) { layer in
-                    Image(uiImage: layer)
+                    Image(decorative: layer, scale: 1.0, orientation: .up)
                         .resizable()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .padding(imageViewPadding)
