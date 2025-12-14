@@ -67,7 +67,8 @@ private extension ImageMask {
                 alreadyChecked.insert(targetCoordinate)
 
                 // 隣接したピクセルをwillCheckに追加
-                let neibors = targetCoordinate.eightNeighbors(in: imageSize)
+//                let neibors = targetCoordinate.eightNeighbors(in: imageSize)
+                let neibors = targetCoordinate.fourNeighbors(in: imageSize)
                 for neibor in neibors {
                     willCheck.insert(neibor)
                 }
@@ -124,6 +125,36 @@ private extension PixelCoordinate {
             neighbors.insert(.init(x: maxX, y: maxY))
         }
 
+        return neighbors
+    }
+
+    func fourNeighbors(in size: CGSize) -> Set<PixelCoordinate> {
+        let maxX = self.x + 1
+        let minX = self.x - 1
+        let maxY = self.y + 1
+        let minY = self.y - 1
+        let topOk = minY >= 0
+        let leftOk = minX >= 0
+        let rightOk = maxX < Int(size.width)
+        let bottomOk = maxY < Int(size.height)
+
+        var neighbors = Set<PixelCoordinate>()
+        // 上
+        if topOk {
+            neighbors.insert(.init(x: self.x, y: minY))
+        }
+        // 左
+        if leftOk {
+            neighbors.insert(.init(x: minX, y: self.y))
+        }
+        // 右
+        if rightOk {
+            neighbors.insert(.init(x: maxX, y: self.y))
+        }
+        // 下
+        if bottomOk {
+            neighbors.insert(.init(x: self.x, y: maxY))
+        }
         return neighbors
     }
 }
