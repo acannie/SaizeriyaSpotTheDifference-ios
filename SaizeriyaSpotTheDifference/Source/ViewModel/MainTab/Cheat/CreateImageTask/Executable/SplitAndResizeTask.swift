@@ -19,8 +19,9 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
         var previewCgImage = try getCgImage(from: previewImage)
 
         // 枠を切り落とし
-        cgImage = try await cgImage.removeBorder(by: 10)
-        previewCgImage = try await previewCgImage.removeBorder(by: 10)
+        let borderPixels = 7
+        cgImage = try await cgImage.removeBorder(by: borderPixels)
+        previewCgImage = try await previewCgImage.removeBorder(by: borderPixels)
 
         // 左右に分割
         let splitedImages = try cgImage.splitImage()
