@@ -8,7 +8,7 @@
 import UIKit
 
 struct ResultImagePayload {
-    let baseImage: UIImage
-    let leftImageDifferenceLayers: [UIImage]
-    let rightImageDifferenceLayers: [UIImage]
+    let baseImage: CGImage
+    let leftImageDifferenceLayers: [CGImage]
+    let rightImageDifferenceLayers: [CGImage]
 }

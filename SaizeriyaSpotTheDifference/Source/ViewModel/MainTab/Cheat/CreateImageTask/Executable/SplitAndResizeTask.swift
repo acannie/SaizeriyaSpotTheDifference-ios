@@ -11,173 +11,51 @@ struct SplitAndResizeTask: CreateImageTaskExecutable {
     let headerText: String = "2枚の絵に分割中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite.processing,
-              case .single(let previewImage) = imageSuite.preview else {
+        guard case .singleCiImage(let ciImage) = imageSuite.processing,
+              case .singleCiImage(let previewCiImage) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
-        var uiImage = image
-        var previewUiImage = previewImage
+
+        let ciContext = CIContext()
+        var cgImage = try ciImage.createCgImage(with: ciContext)
+        var previewCgImage = try previewCiImage.createCgImage(with: ciContext)
 
         // 枠を切り落とし
-        uiImage = uiImage.normalized
-        let rect = try await rectWithoutBorder(image: uiImage)
-        uiImage = try await uiImage.removeBorder(rect: rect)
-        previewUiImage = try await previewUiImage.removeBorder(rect: rect)
+        cgImage = try await cgImage.removeBorder(by: 10)
+        previewCgImage = try await previewCgImage.removeBorder(by: 10)
 
         // 左右に分割
-        let splitImage = try uiImage.splitImage()
-        let splitPreviewImage = try previewUiImage.splitImage()
+        let splitedImages = try cgImage.splitImage()
+        let splitedPreviewImages = try previewCgImage.splitImage()
 
         return .init(
-            processing: .double(left: splitImage.left, right: splitImage.right),
-            preview: .double(left: splitPreviewImage.left, right: splitPreviewImage.right),
+            processing: .doubleCgImage(left: splitedImages.left, right: splitedImages.right),
+            preview: .doubleCgImage(left: splitedPreviewImages.left, right: splitedPreviewImages.right),
             result: nil
         )
     }
 }
 
-private extension SplitAndResizeTask {
-    func rectWithoutBorder(
-        image: UIImage,
-        thickness: Int = 5,
-        step: Int = 10,
-        tolerance: CGFloat = 0.3
-    ) async throws -> CGRect {
-        let rgbGrid = try await RgbGrid(image)
-
-        // MARK: 各辺ごとに平均色を取得
-        func averageColor(_ samples: [Rgb]) -> Rgb {
-            let count = CGFloat(samples.count)
-            let total = samples.reduce(Rgb(r: 0, g: 0, b: 0)) { acc, p in
-                Rgb(
-                    r: acc.r + p.r,
-                    g: acc.g + p.g,
-                    b: acc.b + p.b
-                )
-            }
-            return Rgb(
-                r: total.r / count,
-                g: total.g / count,
-                b: total.b / count
-            )
-        }
-
-        // 上
-        var topSamples: [Rgb] = []
-        for y in 0..<thickness {
-            for x in stride(from: 0, to: rgbGrid.width, by: step) {
-                if x > rgbGrid.width {
-                    break
-                }
-                topSamples.append(rgbGrid.pixel(x, y))
-            }
-        }
-
-        // 下
-        var bottomSamples: [Rgb] = []
-        for y in (rgbGrid.height - thickness)..<rgbGrid.height {
-            for x in stride(from: 0, to: rgbGrid.width, by: step) {
-                if x > rgbGrid.width {
-                    break
-                }
-                bottomSamples.append(rgbGrid.pixel(x, y))
-            }
-        }
-
-        // 左
-        var leftSamples: [Rgb] = []
-        for x in 0..<thickness {
-            for y in stride(from: 0, to: rgbGrid.height, by: step) {
-                if y > rgbGrid.height {
-                    break
-                }
-                leftSamples.append(rgbGrid.pixel(x, y))
-            }
-        }
-
-        // 右
-        var rightSamples: [Rgb] = []
-        for x in (rgbGrid.width - thickness)..<rgbGrid.width {
-            for y in stride(from: 0, to: rgbGrid.height, by: step) {
-                if y > rgbGrid.height {
-                    break
-                }
-                rightSamples.append(rgbGrid.pixel(x, y))
-            }
-        }
-
-        let topColor = averageColor(topSamples)
-        let bottomColor = averageColor(bottomSamples)
-        let leftColor = averageColor(leftSamples)
-        let rightColor = averageColor(rightSamples)
-
-        func isNear(
-            _ point: Rgb,
-            _ base: Rgb
-        ) -> Bool {
-            let dr = pow(point.r - base.r, 2)
-            let dg = pow(point.g - base.g, 2)
-            let db = pow(point.b - base.b, 2)
-            return sqrt(dr + dg + db) < tolerance
-        }
-
-        // MARK: 辺ごとに内側へ進む
-
-        var top = 0
-        while top < rgbGrid.height {
-            let line = (0..<rgbGrid.width).map { rgbGrid.pixel($0, top) }
-            if line.filter({ isNear($0, topColor) }).count > rgbGrid.width / 2 {
-                top += 1
-            } else {
-                break
-            }
-        }
-
-        var bottom = rgbGrid.height - 1
-        while bottom >= 0 {
-            let line = (0..<rgbGrid.width).map { rgbGrid.pixel($0, bottom) }
-            if line.filter({ isNear($0, bottomColor) }).count > rgbGrid.width / 2 {
-                bottom -= 1
-            } else {
-                break
-            }
-        }
-
-        var left = 0
-        while left < rgbGrid.width {
-            let line = (top..<bottom).map { rgbGrid.pixel(left, $0) }
-            if line.filter({ isNear($0, leftColor) }).count > (bottom-top) / 2 {
-                left += 1
-            } else {
-                break
-            }
-        }
-
-        var right = rgbGrid.width - 1
-        while right >= 0 {
-            let line = (top..<bottom).map { rgbGrid.pixel(right, $0) }
-            if line.filter({ isNear($0, rightColor) }).count > (bottom-top) / 2 {
-                right -= 1
-            } else {
-                break
-            }
-        }
-
-        // MARK: 枠を除いたメニューブックの範囲を返す
+private extension CGImage {
+    func removeBorder(by pixels: Int) async throws -> CGImage {
         let rect = CGRect(
-            x: left,
-            y: top,
-            width: max(right - left + 1, 1),
-            height: max(bottom - top + 1, 1)
+            x: pixels,
+            y: pixels,
+            width: self.width - pixels * 2,
+            height: self.height - pixels * 2
         )
-        return rect
-    }
-}
 
-private extension UIImage {
-    func splitImage() throws -> (left: UIImage, right: UIImage) {
-        let width = self.size.width
-        let height = self.size.height
+        guard rect.width > 0, rect.height > 0,
+            let croppedCgImage = self.cropping(to: rect) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+
+        return croppedCgImage
+    }
+
+    func splitImage() throws -> (left: CGImage, right: CGImage) {
+        let width = self.width
+        let height = self.height
 
         let leftRect = CGRect(x: 0, y: 0, width: width / 2, height: height)
         let rightRect = CGRect(x: width / 2, y: 0, width: width / 2, height: height)
@@ -189,12 +67,5 @@ private extension UIImage {
         }
 
         return (leftImage, rightImage)
-    }
-
-    func removeBorder(rect: CGRect) async throws -> UIImage {
-        guard let cropped = self.cgImage?.cropping(to: rect) else {
-            throw CreateImageTaskError.unexpectedError
-        }
-        return UIImage(cgImage: cropped)
     }
 }

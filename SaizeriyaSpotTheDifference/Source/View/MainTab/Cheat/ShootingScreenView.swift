@@ -39,7 +39,7 @@ struct ShootingScreenView: View {
             if let image = camera.capturedImage {
                 self.navigationRouter.path.append(
                     .result(
-                        .single(image),
+                        .singleCgImage(image),
                         from: .camera,
                         cameraPreviewFooterHeight: footerHeight
                     )

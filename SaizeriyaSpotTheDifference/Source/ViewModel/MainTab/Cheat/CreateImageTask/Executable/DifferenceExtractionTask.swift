@@ -12,20 +12,18 @@ struct DifferenceExtractionTask: CreateImageTaskExecutable {
     let headerText: String = "差分を検出中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .double(let left, let right) = imageSuite.processing,
-              case .double(let previewLeft, let previewRight) = imageSuite.preview,
-              let cgImageLeft = left.cgImage,
-              let cgImageRight = right.cgImage else {
+        guard case .doubleCgImage(let leftCgImage, let rightCgImage) = imageSuite.processing,
+              case .doubleCgImage(let previewLeftCgImage, let previewRightCgImage) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
 
         // 差分を抽出
-        let differenceCoordinates: Set<ImageCoordinate> = try await getDifferenceCoordinates(left, right)
-        let differencesOnLeftImage = try await previewLeft.extractPixels(at: differenceCoordinates)
-        let differencesOnRightImage = try await previewRight.extractPixels(at: differenceCoordinates)
+        let differenceCoordinates: Set<ImageCoordinate> = try await getDifferenceCoordinates(leftCgImage, rightCgImage)
+        let differencesOnLeftImage = try await previewLeftCgImage.extractPixels(at: differenceCoordinates)
+        let differencesOnRightImage = try await previewRightCgImage.extractPixels(at: differenceCoordinates)
 
         // ResultPayloadを作成
-        guard case .double(let leftPreviewImage, _) = imageSuite.preview else {
+        guard case .doubleCgImage(let leftPreviewImage, _) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
         let baseImage = leftPreviewImage
@@ -44,18 +42,20 @@ struct DifferenceExtractionTask: CreateImageTaskExecutable {
 
 private extension DifferenceExtractionTask {
     func getDifferenceCoordinates(
-        _ leftImage: UIImage,
-        _ rightImage: UIImage
+        _ leftImage: CGImage,
+        _ rightImage: CGImage
     ) async throws -> Set<ImageCoordinate> {
-        guard leftImage.size == rightImage.size else {
+        guard
+            leftImage.width == rightImage.width,
+            leftImage.height == rightImage.height else {
             throw CreateImageTaskError.unexpectedError
         }
         let leftRgbGrid = try await RgbGrid(leftImage)
         let rightRgbGrid = try await RgbGrid(rightImage)
 
         var differentCoordinates: Set<ImageCoordinate> = []
-        for y in 0..<Int(leftImage.size.height) {
-            for x in 0..<Int(leftImage.size.width) {
+        for y in 0..<Int(leftImage.height) {
+            for x in 0..<Int(leftImage.width) {
                 let leftImagePixelColor = leftRgbGrid.pixel(x, y)
                 let rightImagePixelColor = rightRgbGrid.pixel(x, y)
 
@@ -68,17 +68,14 @@ private extension DifferenceExtractionTask {
     }
 }
 
-private extension UIImage {
-    func extractPixels(at coordinates: Set<ImageCoordinate>) async throws -> UIImage {
-        guard let cgImage = self.cgImage else {
-            throw CreateImageTaskError.unexpectedError
-        }
+private extension CGImage {
+    func extractPixels(at coordinates: Set<ImageCoordinate>) async throws -> CGImage {
         let baseImageRgbGrid = try await RgbGrid(self)
 
         var rgbRows: [[Rgb]] = []
-        for y in 0..<cgImage.height {
+        for y in 0..<self.height {
             var row: [Rgb] = []
-            for x in 0..<cgImage.width {
+            for x in 0..<self.width {
                 let coordinate = ImageCoordinate(x: x, y: y)
                 if coordinates.contains(coordinate) {
                     row.append(baseImageRgbGrid.pixel(x, y))
@@ -89,9 +86,6 @@ private extension UIImage {
             rgbRows.append(row)
         }
         let rgbGrid = try RgbGrid(rgbRows)
-        guard let image = try await rgbGrid.image() else {
-            throw CreateImageTaskError.unexpectedError
-        }
-        return image
+        return try rgbGrid.makeCGImage()
     }
 }

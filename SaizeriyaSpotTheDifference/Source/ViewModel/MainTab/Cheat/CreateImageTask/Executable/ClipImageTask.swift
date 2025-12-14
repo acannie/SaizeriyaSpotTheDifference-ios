@@ -14,27 +14,33 @@ struct ClipImageTask: CreateImageTaskExecutable {
     var headerText: String = "撮影範囲を計算中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let image) = imageSuite.processing else {
+        guard case .singleCgImage(var cgImage) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
 
         // プレビューと画像のサイズ比率
-        let scale = image.size.width / UIScreen.main.bounds.width
+        let scale = CGFloat(cgImage.width) / UIScreen.main.bounds.width
 
-        guard let previewedImage = getPreviewedImage(from: image, scale: scale) else {
-            throw CreateImageTaskError.unexpectedError
-        }
+        cgImage = try await cgImage.previewedImage(
+            scale: scale,
+            layoutHeight: layoutHeight,
+            cameraPreviewFooterHeight: cameraPreviewFooterHeight
+        )
 
         return .init(
-            processing: .single(previewedImage),
-            preview: .single(previewedImage),
+            processing: .singleCgImage(cgImage),
+            preview: .singleCgImage(cgImage),
             result: nil
         )
     }
 }
 
-private extension ClipImageTask {
-    func getPreviewedImage(from image: UIImage, scale: CGFloat) -> UIImage? {
+private extension CGImage {
+    func previewedImage(
+        scale: CGFloat,
+        layoutHeight: LayoutHeight,
+        cameraPreviewFooterHeight: CGFloat
+    ) async throws -> CGImage {
         // x座標は0
         let originX: CGFloat = 0
 
@@ -42,7 +48,7 @@ private extension ClipImageTask {
         let headerHeight = layoutHeight.headerHeight
         let contentHeight = layoutHeight.contentHeight
         let cameraPreviewHeight = contentHeight - cameraPreviewFooterHeight
-        let originY = headerHeight
+        let originY = headerHeight * scale
 
         // トリミング開始地点
         let cropRect = CGRect(
@@ -52,6 +58,10 @@ private extension ClipImageTask {
             height: cameraPreviewHeight * scale
         )
 
-        return image.cropping(to: cropRect)
+        guard let cropped = self.cropping(to: cropRect) else {
+            throw CreateImageTaskError.unexpectedError
+        }
+
+        return cropped
     }
 }

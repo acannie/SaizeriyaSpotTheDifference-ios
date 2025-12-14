@@ -13,34 +13,30 @@ struct ReductionTask: CreateImageTaskExecutable {
     let headerText: String = "画像サイズを調整中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(var uiImage) = imageSuite.processing else {
+        guard case .singleCiImage(var ciImage) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
 
-        uiImage = await uiImage.reduction(height: 300)
+        ciImage = ciImage.reduction(targetHeight: 300)
 
         return .init(
-            processing: .single(uiImage),
-            preview: .single(uiImage),
+            processing: .singleCiImage(ciImage),
+            preview: .singleCiImage(ciImage),
             result: nil
         )
     }
 }
 
-private extension UIImage {
-    func reduction(height: CGFloat) async -> UIImage {
-        let targetHeight: CGFloat = 300
-        let originalSize = self.size
-        let scale = targetHeight / originalSize.height
-        if scale > 1.0 {
+private extension CIImage {
+    func reduction(targetHeight: CGFloat) -> CIImage {
+        let originalHeight = self.extent.height
+        let scale = targetHeight / originalHeight
+
+        guard scale < 1.0 else {
             return self
         }
-        let newSize = CGSize(width: originalSize.width * scale, height: targetHeight)
 
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        let uiImage = renderer.image { _ in
-            self.draw(in: CGRect(origin: .zero, size: newSize))
-        }
-        return uiImage
+        let transform = CGAffineTransform(scaleX: scale, y: scale)
+        return self.transformed(by: transform)
     }
 }

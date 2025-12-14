@@ -11,14 +11,9 @@ struct PosterizeTask: CreateImageTaskExecutable {
     let headerText: String = "ポスタライズ加工中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .single(let uiImage) = imageSuite.processing,
-              let cgImage = uiImage.cgImage else {
+        guard case .singleCiImage(var ciImage) = imageSuite.processing else {
             throw CreateImageTaskError.unexpectedError
         }
-
-        // 画像の形式変換
-        let context = CIContext()
-        var ciImage = CIImage(cgImage: cgImage)
 
         // ポスタライズ処理
         ciImage = try await ciImage.posterize()
@@ -27,16 +22,8 @@ struct PosterizeTask: CreateImageTaskExecutable {
         let palette = try await ciImage.kMeans()
         ciImage = try await ciImage.palettize(paletteImage: palette.settingAlphaOne(in: palette.extent))
 
-        // 返却値の作成
-        let resultCgImage = try ciImage.createCgImage(with: context)
-        let resultImage = UIImage(
-            cgImage: resultCgImage,
-            scale: uiImage.scale,
-            orientation: uiImage.imageOrientation
-        )
-
         return .init(
-            processing: .single(resultImage),
+            processing: .singleCiImage(ciImage),
             preview: imageSuite.preview,
             result: nil
         )

@@ -11,19 +11,20 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
     let headerText: String = "位置を調整中"
 
     func process(from imageSuite: ImageSuite) async throws -> ImageSuite {
-        guard case .double(let left, let right) = imageSuite.processing,
-              case .double(let previewLeft, let previewRight) = imageSuite.preview else {
+        guard case .doubleCgImage(let leftCgImage, let rightCgImage) = imageSuite.processing,
+              case .doubleCgImage(let previewLeftCgImage, let previewRightCgImage) = imageSuite.preview else {
             throw CreateImageTaskError.unexpectedError
         }
 
         // 最適なオフセットを探索
-        let optimalOffset = try await findOptimalOffset(left, right)
+        let optimalOffset = try await findOptimalOffset(leftCgImage, rightCgImage)
 
         // オフセット分ずらした画像を作成
-        let imageSize = left.size
+        let imageWidth = leftCgImage.width
+        let imageHeight = leftCgImage.height
         let newImageSize = CGSize(
-            width: imageSize.width - CGFloat(abs(optimalOffset.x)),
-            height: imageSize.height - CGFloat(abs(optimalOffset.y)),
+            width: imageWidth - abs(optimalOffset.x),
+            height: imageHeight - abs(optimalOffset.y),
         )
         let leftImageCropRect = CGRect(
             x: optimalOffset.x > 0 ? CGFloat(optimalOffset.x) : 0,
@@ -37,16 +38,16 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
             width: newImageSize.width,
             height: newImageSize.height
         )
-        guard let optimizedProcessingLeft = left.cropping(to: leftImageCropRect),
-              let optimizedProcessingRight = right.cropping(to: rightImageCropRect),
-              let optimizedPreviewLeft = previewLeft.cropping(to: leftImageCropRect),
-              let optimizedPreviewRight = previewRight.cropping(to: rightImageCropRect) else {
+        guard let optimizedProcessingLeft = leftCgImage.cropping(to: leftImageCropRect),
+              let optimizedProcessingRight = rightCgImage.cropping(to: rightImageCropRect),
+              let optimizedPreviewLeft = previewLeftCgImage.cropping(to: leftImageCropRect),
+              let optimizedPreviewRight = previewRightCgImage.cropping(to: rightImageCropRect) else {
             throw CreateImageTaskError.unexpectedError
         }
 
         return .init(
-            processing: .double(left: optimizedProcessingLeft, right: optimizedProcessingRight),
-            preview: .double(left: optimizedPreviewLeft, right: optimizedPreviewRight),
+            processing: .doubleCgImage(left: optimizedProcessingLeft, right: optimizedProcessingRight),
+            preview: .doubleCgImage(left: optimizedPreviewLeft, right: optimizedPreviewRight),
             result: nil
         )
     }
@@ -54,16 +55,18 @@ struct AdjustOffsetTask: CreateImageTaskExecutable {
 
 private extension AdjustOffsetTask {
     func findOptimalOffset(
-        _ leftImage: UIImage,
-        _ rightImage: UIImage,
+        _ leftImage: CGImage,
+        _ rightImage: CGImage,
         sampleCount: Int = 1000,
         offsetRange: ClosedRange<Int> = -30...30
     ) async throws -> ImageCoordinate {
-        guard leftImage.size == rightImage.size else {
+        guard
+            leftImage.width == rightImage.width,
+            leftImage.height == rightImage.height else {
             throw CreateImageTaskError.unexpectedError
         }
-        let imageWidth = Int(leftImage.size.width)
-        let imageHeight = Int(leftImage.size.height)
+        let imageWidth = Int(leftImage.width)
+        let imageHeight = Int(leftImage.height)
         let leftRgbGrid = try await RgbGrid(leftImage)
         let rightRgbGrid = try await RgbGrid(rightImage)
 
@@ -103,28 +106,5 @@ private extension AdjustOffsetTask {
             }
         }
         return optimalOffset
-    }
-}
-
-private extension ClipImageTask {
-    func getPreviewedImage(from image: UIImage, scale: CGFloat) -> UIImage? {
-        // x座標は0
-        let originX: CGFloat = 0
-
-        // y座標を計算
-        let headerHeight = layoutHeight.headerHeight
-        let contentHeight = layoutHeight.contentHeight
-        let cameraPreviewHeight = contentHeight - cameraPreviewFooterHeight
-        let originY = headerHeight
-
-        // トリミング開始地点
-        let cropRect = CGRect(
-            x: originX * scale,
-            y: originY * scale,
-            width: UIScreen.main.bounds.width * scale,
-            height: cameraPreviewHeight * scale
-        )
-
-        return image.cropping(to: cropRect)
     }
 }
