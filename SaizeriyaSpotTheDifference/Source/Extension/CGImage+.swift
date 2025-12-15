@@ -19,7 +19,7 @@ extension CGImage {
                 if coordinates.contains(coordinate) {
                     row.append(baseImageRgbGrid.pixel(x, y))
                 } else {
-                    row.append(.init(r: 0, g: 0, b: 0))
+                    row.append(.init(r: 0, g: 0, b: 0, a: 0))
                 }
             }
             rgbRows.append(row)

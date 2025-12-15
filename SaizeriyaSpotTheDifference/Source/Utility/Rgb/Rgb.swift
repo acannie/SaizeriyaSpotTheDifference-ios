@@ -11,6 +11,7 @@ struct Rgb {
     let r: CGFloat
     let g: CGFloat
     let b: CGFloat
+    let a: CGFloat
 
     var hex: String {
         let r255 = Int(self.r * 255)
