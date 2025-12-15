@@ -67,8 +67,7 @@ private extension ImageMask {
                 alreadyChecked.insert(targetCoordinate)
 
                 // 隣接したピクセルをwillCheckに追加
-//                let neibors = targetCoordinate.eightNeighbors(in: imageSize)
-                let neibors = targetCoordinate.fourNeighbors(in: imageSize)
+                let neibors = targetCoordinate.neighbors(.four, in: imageSize)
                 for neibor in neibors {
                     willCheck.insert(neibor)
                 }
@@ -81,54 +80,12 @@ private extension ImageMask {
 }
 
 private extension PixelCoordinate {
-    func eightNeighbors(in size: CGSize) -> Set<PixelCoordinate> {
-        let maxX = self.x + 1
-        let minX = self.x - 1
-        let maxY = self.y + 1
-        let minY = self.y - 1
-        let topOk = minY >= 0
-        let leftOk = minX >= 0
-        let rightOk = maxX < Int(size.width)
-        let bottomOk = maxY < Int(size.height)
-
-        var neighbors = Set<PixelCoordinate>()
-        // 左上
-        if topOk, leftOk {
-            neighbors.insert(.init(x: minX, y: minY))
-        }
-        // 上
-        if topOk {
-            neighbors.insert(.init(x: self.x, y: minY))
-        }
-        // 右上
-        if topOk, rightOk {
-            neighbors.insert(.init(x: maxX, y: minY))
-        }
-        // 左
-        if leftOk {
-            neighbors.insert(.init(x: minX, y: self.y))
-        }
-        // 右
-        if rightOk {
-            neighbors.insert(.init(x: maxX, y: self.y))
-        }
-        // 左下
-        if bottomOk, leftOk {
-            neighbors.insert(.init(x: minX, y: maxY))
-        }
-        // 下
-        if bottomOk {
-            neighbors.insert(.init(x: self.x, y: maxY))
-        }
-        // 右下
-        if bottomOk, rightOk {
-            neighbors.insert(.init(x: maxX, y: maxY))
-        }
-
-        return neighbors
+    enum NeiborType {
+        case four
+        case eight
     }
 
-    func fourNeighbors(in size: CGSize) -> Set<PixelCoordinate> {
+    func neighbors(_ type: NeiborType, in size: CGSize) -> Set<PixelCoordinate> {
         let maxX = self.x + 1
         let minX = self.x - 1
         let maxY = self.y + 1
@@ -155,36 +112,35 @@ private extension PixelCoordinate {
         if bottomOk {
             neighbors.insert(.init(x: self.x, y: maxY))
         }
+        if type == .eight {
+            // 左上
+            if topOk, leftOk {
+                neighbors.insert(.init(x: minX, y: minY))
+            }
+            // 右上
+            if topOk, rightOk {
+                neighbors.insert(.init(x: maxX, y: minY))
+            }
+            // 左下
+            if bottomOk, leftOk {
+                neighbors.insert(.init(x: minX, y: maxY))
+            }
+            // 右下
+            if bottomOk, rightOk {
+                neighbors.insert(.init(x: maxX, y: maxY))
+            }
+        }
+
         return neighbors
     }
 }
 
 private extension NoiseReductionTask {
     func reduceSmallRegion(from regions: Set<PixelRegion>) -> Set<PixelRegion> {
-        let largeRegions = regions.filter { $0.size > 10 }
-        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(10)
+        let threthold = 10
+        let largeRegions = regions.filter { $0.size > threthold }
+        let regionCount = 100
+        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
         return Set<PixelRegion>(top10Regions)
-    }
-}
-
-private extension CGImage {
-    func extractPixels(at coordinates: Set<PixelCoordinate>) async throws -> CGImage {
-        let baseImageRgbGrid = try await RgbGrid(self)
-
-        var rgbRows: [[Rgb]] = []
-        for y in 0..<self.height {
-            var row: [Rgb] = []
-            for x in 0..<self.width {
-                let coordinate = PixelCoordinate(x: x, y: y)
-                if coordinates.contains(coordinate) {
-                    row.append(baseImageRgbGrid.pixel(x, y))
-                } else {
-                    row.append(.init(r: 0, g: 0, b: 0, a: 0))
-                }
-            }
-            rgbRows.append(row)
-        }
-        let rgbGrid = try RgbGrid(rgbRows)
-        return try rgbGrid.makeCGImage()
     }
 }
