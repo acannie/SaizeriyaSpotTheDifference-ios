@@ -165,7 +165,7 @@ private extension CheatResultScreenView {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(imageViewPadding)
                 Rectangle()
-                    .foregroundStyle(.resultImageFilter)
+                    .foregroundStyle(.resultImageOverlay)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .padding(imageViewPadding)
                 ForEach(resultImage.leftImageDifferenceLayers, id: \.self) { layer in
