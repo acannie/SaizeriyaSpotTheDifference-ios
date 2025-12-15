@@ -62,8 +62,8 @@ struct RgbGrid {
                 let red = CGFloat(imageData[offset]) / 255.0
                 let green = CGFloat(imageData[offset + 1]) / 255.0
                 let blue = CGFloat(imageData[offset + 2]) / 255.0
-                _ = CGFloat(imageData[offset + 3]) / 255.0
-                let color = Rgb(r: red, g: green, b: blue, a: 1)
+                let alpha = CGFloat(imageData[offset + 3]) / 255.0
+                let color = Rgb(r: red, g: green, b: blue, a: alpha)
                 row.append(color)
             }
             rgbRows.append(row)
