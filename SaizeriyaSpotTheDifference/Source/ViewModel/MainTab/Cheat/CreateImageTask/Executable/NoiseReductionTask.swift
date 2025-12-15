@@ -137,8 +137,10 @@ private extension PixelCoordinate {
 
 private extension NoiseReductionTask {
     func reduceSmallRegion(from regions: Set<PixelRegion>) -> Set<PixelRegion> {
-        let largeRegions = regions.filter { $0.size > 10 }
-        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(10)
+        let threthold = 10
+        let largeRegions = regions.filter { $0.size > threthold }
+        let regionCount = 100
+        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
         return Set<PixelRegion>(top10Regions)
     }
 }
