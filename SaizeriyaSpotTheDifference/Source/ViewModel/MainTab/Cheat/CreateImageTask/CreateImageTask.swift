@@ -16,6 +16,7 @@ enum CreateImageTask: CaseIterable {
     case splitAndResize
     case adjustOffset
     case differenceExtraction
+    case noizeReduction
 
     func executable(
         layoutHeight: LayoutHeight,
@@ -41,6 +42,8 @@ enum CreateImageTask: CaseIterable {
             AdjustOffsetTask()
         case .differenceExtraction:
             DifferenceExtractionTask()
+        case .noizeReduction:
+            NoiseReductionTask()
         }
     }
 
