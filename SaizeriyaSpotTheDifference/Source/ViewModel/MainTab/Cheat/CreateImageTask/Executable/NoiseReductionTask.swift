@@ -22,10 +22,25 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         let (previewLeftCgImage, previewRightCgImage) = try getCgImagePair(from: imagePair)
         let imageSize = CGSize(width: previewLeftCgImage.width, height: previewLeftCgImage.height)
 
-        // 領域に分割
+        // 差分マスクを領域に分割
         var masks = await mask.splitMaskIntoRegions(imageSize: imageSize)
         masks = reduceSmallRegion(from: masks)
         mask = ImageMask(regions: masks)
+
+        // 差分マスク外を領域に分割
+        var nonMasks = await mask.getNonMaskRegions(imageSize: imageSize)
+        nonMasks = reduceSmallRegion(from: nonMasks, isMask: false)
+
+        // 差分マスク外領域を反転して差分マスクを得る
+        var nonMaskCoordinates: Set<PixelCoordinate> = []
+        for nonMask in nonMasks {
+            nonMaskCoordinates.formUnion(nonMask.coordinates)
+        }
+        let maskCoordinates = reverseNonMaskToGetMask(nonMaskCoordinates, in: imageSize)
+        mask = ImageMask(coordinates: maskCoordinates)
+
+        // 再度差分マスクを領域に分割
+        masks = await mask.splitMaskIntoRegions(imageSize: imageSize)
 
         // ResultPayloadを作成
         let differencesOnLeftImage = try await previewLeftCgImage.extractPixels(at: mask.coordinates)
@@ -73,6 +88,46 @@ private extension ImageMask {
                 }
             }
             regions.insert(region)
+        }
+
+        return regions
+    }
+
+    func getNonMaskRegions(imageSize: CGSize) async -> Set<PixelRegion> {
+        var alreadyChecked = Set<PixelCoordinate>()
+        var regions = Set<PixelRegion>()
+
+        // BFSで領域分割
+        for y in 0..<Int(imageSize.height) {
+            for x in 0..<Int(imageSize.width) {
+                let coordinate = PixelCoordinate(x: x, y: y)
+                if coordinates.contains(coordinate) {
+                    continue
+                }
+                if alreadyChecked.contains(coordinate) {
+                    continue
+                }
+                var region = PixelRegion()
+                var willCheck = Set<PixelCoordinate>()
+                willCheck.insert(coordinate)
+                while let targetCoordinate = willCheck.popFirst() {
+                    if self.contains(coordinate: targetCoordinate) {
+                        continue
+                    }
+                    if alreadyChecked.contains(targetCoordinate) {
+                        continue
+                    }
+                    region.insert(targetCoordinate)
+                    alreadyChecked.insert(targetCoordinate)
+
+                    // 隣接したピクセルをwillCheckに追加
+                    let neibors = targetCoordinate.neighbors(.four, in: imageSize)
+                    for neibor in neibors {
+                        willCheck.insert(neibor)
+                    }
+                }
+                regions.insert(region)
+            }
         }
 
         return regions
@@ -136,11 +191,22 @@ private extension PixelCoordinate {
 }
 
 private extension NoiseReductionTask {
-    func reduceSmallRegion(from regions: Set<PixelRegion>) -> Set<PixelRegion> {
-        let threthold = 10
+    func reduceSmallRegion(from regions: Set<PixelRegion>, isMask: Bool = true) -> Set<PixelRegion> {
+        let threthold = isMask ? 10 : 100
         let largeRegions = regions.filter { $0.size > threthold }
-        let regionCount = 100
+        let regionCount = isMask ? 100 : 1
         let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
         return Set<PixelRegion>(top10Regions)
+    }
+
+    func reverseNonMaskToGetMask(_ nonMaskRegion: Set<PixelCoordinate>, in size: CGSize) -> Set<PixelCoordinate> {
+        var allPixels = Set<PixelCoordinate>()
+        for y in 0..<Int(size.height) {
+            for x in 0..<Int(size.width) {
+                let cooridinate = PixelCoordinate(x: x, y: y)
+                allPixels.insert(cooridinate)
+            }
+        }
+        return allPixels.subtracting(nonMaskRegion)
     }
 }
