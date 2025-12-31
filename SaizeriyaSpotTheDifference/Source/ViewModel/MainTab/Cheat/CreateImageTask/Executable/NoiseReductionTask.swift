@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 struct NoiseReductionTask: CreateImageTaskExecutable {
     let headerText: String = "ノイズ除去中"
@@ -25,6 +26,7 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         // 差分マスクを領域に分割し、ゴミ除去してノイズ除去
         var regions = await mask.getRegionSet(imageSize: imageSize)
         regions = regions.reduceSmallRegion()
+        regions = try await regions.reduceSimillarRegion(leftImage: previewLeftCgImage, rightImage: previewRightCgImage)
 
         // 差分マスク外の領域を計算し、さらに反転して穴凹除去
         let reversedRegions = await regions.reverse(imageSize: imageSize)
@@ -152,6 +154,29 @@ private extension PixelRegionSet {
         return PixelRegionSet(regions: Set(top10Regions))
     }
 
+    func reduceSimillarRegion(
+        leftImage: CGImage,
+        rightImage: CGImage
+    ) async throws -> PixelRegionSet {
+        let regionCount = 30
+        var regionDistances: [(region: PixelRegion, distance: Double)] = []
+        regionDistances.reserveCapacity(self.regions.count)
+
+        for region in self.regions {
+            let leftColor = try await region.averageColor(of: leftImage)
+            let rightColor = try await region.averageColor(of: rightImage)
+            let distance = leftColor.distance(from: rightColor)
+            regionDistances.append((region, distance))
+        }
+
+        let topRegions = regionDistances
+            .sorted { $0.distance > $1.distance }
+            .prefix(regionCount)
+            .map { $0.region }
+
+        return PixelRegionSet(regions: Set(topRegions))
+    }
+
     func getLargestRegion() -> PixelRegion {
         let largestRegion = self.regions.sorted { $0.size > $1.size }.first
         return largestRegion ?? .init()
@@ -203,5 +228,19 @@ private extension PixelRegion {
         let mask = ImageMask(coordinates: reversedCoordinates)
         let regions = await mask.getRegionSet(imageSize: size)
         return regions
+    }
+
+    func averageColor(of image: CGImage) async throws -> Rgb {
+        let rgbGrid = try await RgbGrid(image)
+        var totalR: CGFloat = 0, totalG: CGFloat = 0, totalB: CGFloat = 0
+        for coordinate in self.coordinates {
+            totalB += CGFloat(rgbGrid.pixel(coordinate).b)
+            totalG += CGFloat(rgbGrid.pixel(coordinate).g)
+            totalR += CGFloat(rgbGrid.pixel(coordinate).r)
+        }
+        let averageR = totalR / CGFloat(self.coordinates.count)
+        let averageG = totalG / CGFloat(self.coordinates.count)
+        let averageB = totalB / CGFloat(self.coordinates.count)
+        return .init(r: averageR, g: averageG, b: averageB, a: 1)
     }
 }

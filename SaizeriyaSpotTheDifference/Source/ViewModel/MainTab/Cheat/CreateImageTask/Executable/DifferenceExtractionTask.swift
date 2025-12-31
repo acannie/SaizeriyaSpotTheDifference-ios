@@ -102,6 +102,6 @@ private extension DifferenceExtractionTask {
                 }
             }
         }
-        return minLabDeltaE > 0.2 // FIXME: 閾値調整
+        return minLabDeltaE > 0.01 // FIXME: 閾値調整
     }
 }
