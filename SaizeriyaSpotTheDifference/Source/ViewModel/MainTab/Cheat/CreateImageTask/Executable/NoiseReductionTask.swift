@@ -22,16 +22,15 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         let (previewLeftCgImage, previewRightCgImage) = try getCgImagePair(from: imagePair)
         let imageSize = CGSize(width: previewLeftCgImage.width, height: previewLeftCgImage.height)
 
-        // 差分マスクを領域に分割
-        var regions = await mask.getRegions(imageSize: imageSize)
-        regions = reduceSmallRegion(from: regions)
-        mask = ImageMask(regions: regions)
+        // 差分マスクを領域に分割し、ゴミ除去してノイズ除去
+        var regions = await mask.getRegionSet(imageSize: imageSize)
+        regions = regions.reduceSmallRegion()
 
-        // 差分マスク外の領域を計算し、さらに反転
-        let reversedRegions = await mask.getRegions(imageSize: imageSize, isReversed: true)
-        let largestReversedRegion = getLargestRegion(of: reversedRegions)
-        let reversedMask = ImageMask(regions: Set<PixelRegion>([largestReversedRegion]))
-        mask = await reversedMask.reverse(in: imageSize)
+        // 差分マスク外の領域を計算し、さらに反転して穴凹除去
+        let reversedRegions = await regions.reverse(imageSize: imageSize)
+        let largestReversedRegion = reversedRegions.getLargestRegion()
+        let noiseRemovedRegions = await largestReversedRegion.reverse(size: imageSize)
+        mask = ImageMask(regionSet: noiseRemovedRegions)
 
         // ResultPayloadを作成
         let differencesOnLeftImage = try await previewLeftCgImage.extractPixels(at: mask.coordinates)
@@ -50,16 +49,13 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
 }
 
 private extension ImageMask {
-    func getRegions(imageSize: CGSize, isReversed: Bool = false) async -> Set<PixelRegion> {
+    func getRegionSet(imageSize: CGSize) async -> PixelRegionSet {
         var alreadyChecked = Set<PixelCoordinate>()
-        var regions = Set<PixelRegion>()
+        var regions = PixelRegionSet(regions: [])
 
         // BFSで領域分割
         for coordinate in self.coordinates {
-            if !isReversed, self.coordinates.contains(coordinate) {
-                continue
-            }
-            if isReversed, !self.coordinates.contains(coordinate) {
+            if !self.coordinates.contains(coordinate) {
                 continue
             }
             if alreadyChecked.contains(coordinate) {
@@ -69,10 +65,7 @@ private extension ImageMask {
             var willCheck = Set<PixelCoordinate>()
             willCheck.insert(coordinate)
             while let targetCoordinate = willCheck.popFirst() {
-                if !isReversed, self.contains(coordinate: targetCoordinate) {
-                    continue
-                }
-                if isReversed, !self.contains(coordinate: targetCoordinate) {
+                if !self.contains(coordinate: targetCoordinate) {
                     continue
                 }
                 if alreadyChecked.contains(targetCoordinate) {
@@ -150,23 +143,48 @@ private extension PixelCoordinate {
     }
 }
 
-private extension NoiseReductionTask {
-    func reduceSmallRegion(from regions: Set<PixelRegion>) -> Set<PixelRegion> {
+private extension PixelRegionSet {
+    func reduceSmallRegion() -> PixelRegionSet {
         let threthold = 1
-        let largeRegions = regions.filter { $0.size > threthold }
+        let largeRegions = self.regions.filter { $0.size > threthold }
         let regionCount = 100
         let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
-        return Set<PixelRegion>(top10Regions)
+        return PixelRegionSet(regions: Set(top10Regions))
     }
 
-    func getLargestRegion(of regions: Set<PixelRegion>) -> PixelRegion {
-        let largestRegion = regions.sorted { $0.size > $1.size }.first
+    func getLargestRegion() -> PixelRegion {
+        let largestRegion = self.regions.sorted { $0.size > $1.size }.first
         return largestRegion ?? .init()
+    }
+
+    func reverse(imageSize: CGSize) async -> PixelRegionSet {
+        let width = Int(imageSize.width)
+        let height = Int(imageSize.height)
+
+        var reversedCoordinates = Set<PixelCoordinate>()
+        reversedCoordinates.reserveCapacity(width * height)
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let coordinate = PixelCoordinate(x: x, y: y)
+                reversedCoordinates.insert(coordinate)
+            }
+        }
+
+        for region in regions {
+            for coordinate in region.coordinates {
+                reversedCoordinates.remove(coordinate)
+            }
+        }
+
+        let imageMask = ImageMask(coordinates: reversedCoordinates)
+        let regions = await imageMask.getRegionSet(imageSize: imageSize)
+        return regions
     }
 }
 
-private extension ImageMask {
-    func reverse(in size: CGSize) async -> ImageMask {
+private extension PixelRegion {
+    func reverse(size: CGSize) async -> PixelRegionSet {
         let width = Int(size.width)
         let height = Int(size.height)
 
@@ -183,7 +201,7 @@ private extension ImageMask {
         }
 
         let mask = ImageMask(coordinates: reversedCoordinates)
-        let regions = await mask.getRegions(imageSize: size)
-        return ImageMask(regions: regions)
+        let regions = await mask.getRegionSet(imageSize: size)
+        return regions
     }
 }
