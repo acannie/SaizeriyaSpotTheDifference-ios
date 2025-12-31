@@ -26,7 +26,7 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         // 差分マスクを領域に分割し、ゴミ除去してノイズ除去
         var regions = await mask.getRegionSet(imageSize: imageSize)
         regions = regions.reduceSmallRegion()
-        regions = try await regions.reduceSimillarRegion(leftImage: previewLeftCgImage, rightImage: previewRightCgImage)
+        regions = try await regions.reduceByCompositeScore(leftImage: previewLeftCgImage, rightImage: previewRightCgImage)
 
         // 差分マスク外の領域を計算し、さらに反転して穴凹除去
         let reversedRegions = await regions.reverse(imageSize: imageSize)
@@ -146,35 +146,54 @@ private extension PixelCoordinate {
 }
 
 private extension PixelRegionSet {
-    func reduceSmallRegion() -> PixelRegionSet {
-        let threthold = 1
-        let largeRegions = self.regions.filter { $0.size > threthold }
-        let regionCount = 100
-        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
-        return PixelRegionSet(regions: Set(top10Regions))
-    }
-
-    func reduceSimillarRegion(
+    func reduceByCompositeScore(
         leftImage: CGImage,
         rightImage: CGImage
     ) async throws -> PixelRegionSet {
         let regionCount = 30
-        var regionDistances: [(region: PixelRegion, distance: Double)] = []
-        regionDistances.reserveCapacity(self.regions.count)
+
+        // 非同期で色差を計算
+        var items: [(region: PixelRegion, size: Int, distance: Double)] = []
+        items.reserveCapacity(self.regions.count)
 
         for region in self.regions {
             let leftColor = try await region.averageColor(of: leftImage)
             let rightColor = try await region.averageColor(of: rightImage)
             let distance = leftColor.distance(from: rightColor)
-            regionDistances.append((region, distance))
+
+            items.append((
+                region: region,
+                size: region.size,
+                distance: distance
+            ))
         }
 
-        let topRegions = regionDistances
-            .sorted { $0.distance > $1.distance }
+        // 正規化
+        let maxSize = Double(items.map(\.size).max() ?? 1)
+        let maxDistance = items.map(\.distance).max() ?? 1
+
+        let scored = items.map { item -> (PixelRegion, Double) in
+            let normalizedSize = Double(item.size) / maxSize
+            let normalizedDistance = item.distance / maxDistance
+            let score = pow(normalizedSize, 1.2) * pow(normalizedDistance, 0.8)
+            return (item.region, score)
+        }
+
+        // スコアでソート
+        let topRegions = scored
+            .sorted { $0.1 > $1.1 }
             .prefix(regionCount)
-            .map { $0.region }
+            .map { $0.0 }
 
         return PixelRegionSet(regions: Set(topRegions))
+    }
+
+    func reduceSmallRegion() -> PixelRegionSet {
+        let threthold = 5
+        let largeRegions = self.regions.filter { $0.size > threthold }
+        let regionCount = 100
+        let top10Regions = largeRegions.sorted { $0.size > $1.size }.prefix(regionCount)
+        return PixelRegionSet(regions: Set(top10Regions))
     }
 
     func getLargestRegion() -> PixelRegion {
