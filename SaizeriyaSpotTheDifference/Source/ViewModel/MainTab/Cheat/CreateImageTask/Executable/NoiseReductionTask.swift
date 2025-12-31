@@ -23,12 +23,12 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         let imageSize = CGSize(width: previewLeftCgImage.width, height: previewLeftCgImage.height)
 
         // 差分マスクを領域に分割
-        var masks = await mask.getRegions(imageSize: imageSize)
-        masks = reduceSmallRegion(from: masks)
-        mask = ImageMask(regions: masks)
+        var regions = await mask.getRegions(imageSize: imageSize)
+        regions = reduceSmallRegion(from: regions)
+        mask = ImageMask(regions: regions)
 
         // 差分マスク外の領域を計算し、さらに反転
-        var reversedRegions = await mask.getRegions(imageSize: imageSize, isMask: false)
+        let reversedRegions = await mask.getRegions(imageSize: imageSize, isReversed: true)
         let largestReversedRegion = getLargestRegion(of: reversedRegions)
         let reversedMask = ImageMask(regions: Set<PixelRegion>([largestReversedRegion]))
         mask = await reversedMask.reverse(in: imageSize)
@@ -50,16 +50,16 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
 }
 
 private extension ImageMask {
-    func getRegions(imageSize: CGSize, isMask: Bool = true) async -> Set<PixelRegion> {
+    func getRegions(imageSize: CGSize, isReversed: Bool = false) async -> Set<PixelRegion> {
         var alreadyChecked = Set<PixelCoordinate>()
         var regions = Set<PixelRegion>()
 
         // BFSで領域分割
         for coordinate in self.coordinates {
-            if isMask, self.coordinates.contains(coordinate) {
+            if !isReversed, self.coordinates.contains(coordinate) {
                 continue
             }
-            if !isMask, !self.coordinates.contains(coordinate) {
+            if isReversed, !self.coordinates.contains(coordinate) {
                 continue
             }
             if alreadyChecked.contains(coordinate) {
@@ -69,10 +69,10 @@ private extension ImageMask {
             var willCheck = Set<PixelCoordinate>()
             willCheck.insert(coordinate)
             while let targetCoordinate = willCheck.popFirst() {
-                if isMask, !self.contains(coordinate: targetCoordinate) {
+                if !isReversed, self.contains(coordinate: targetCoordinate) {
                     continue
                 }
-                if !isMask, self.contains(coordinate: targetCoordinate) {
+                if isReversed, !self.contains(coordinate: targetCoordinate) {
                     continue
                 }
                 if alreadyChecked.contains(targetCoordinate) {
