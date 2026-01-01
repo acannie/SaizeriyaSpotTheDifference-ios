@@ -83,6 +83,9 @@ private extension DifferenceExtractionTask {
         let offset = 1
         for offsetX in -offset...offset {
             for offsetY in -offset...offset {
+                if abs(offsetX) + abs(offsetY) != 1 {
+                    continue
+                }
                 let targetCoordinateX = coordinate.x + offsetX
                 let targetCoordinateY = coordinate.y + offsetY
                 guard
