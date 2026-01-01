@@ -12,9 +12,9 @@ struct ImageMask: Hashable {
         self.coordinates = coordinates
     }
 
-    init(regions: Set<PixelRegion>) {
+    init(regionSet: PixelRegionSet) {
         var coordinates: Set<PixelCoordinate> = []
-        for region in regions {
+        for region in regionSet.regions {
             coordinates.formUnion(region.coordinates)
         }
         self.coordinates = coordinates

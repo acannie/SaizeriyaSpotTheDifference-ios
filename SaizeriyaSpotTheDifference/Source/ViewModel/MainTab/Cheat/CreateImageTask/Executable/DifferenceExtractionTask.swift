@@ -56,14 +56,55 @@ private extension DifferenceExtractionTask {
         var differentCoordinates: Set<PixelCoordinate> = []
         for y in 0..<Int(leftImage.height) {
             for x in 0..<Int(leftImage.width) {
-                let leftImagePixelColor = leftRgbGrid.pixel(x, y)
-                let rightImagePixelColor = rightRgbGrid.pixel(x, y)
-
-                if leftImagePixelColor.labDistance(from: rightImagePixelColor) > 0.2 { // FIXME: 閾値調整
+                let coorinate = PixelCoordinate(x: x, y: y)
+                if isDifferent(
+                    leftRgbGrid: leftRgbGrid,
+                    rightRgbGrid: rightRgbGrid,
+                    coordinate: coorinate
+                ) {
                     differentCoordinates.insert(.init(x: x, y: y))
                 }
             }
         }
         return differentCoordinates
+    }
+
+    func isDifferent(
+        leftRgbGrid: RgbGrid,
+        rightRgbGrid: RgbGrid,
+        coordinate: PixelCoordinate
+    ) -> Bool {
+        // 8近傍で最もLabΔE距離が小さいものが閾値以上であるか判定する
+        var minLabDeltaE: Double = .infinity
+        let baseColor = leftRgbGrid.pixel(coordinate)
+        let imageWidth = leftRgbGrid.width
+        let imageHeight = leftRgbGrid.height
+
+        let offset = 1
+        for offsetX in -offset...offset {
+            for offsetY in -offset...offset {
+                if abs(offsetX) + abs(offsetY) != 1 {
+                    continue
+                }
+                let targetCoordinateX = coordinate.x + offsetX
+                let targetCoordinateY = coordinate.y + offsetY
+                guard
+                    0 <= targetCoordinateX, targetCoordinateX < imageWidth,
+                    0 <= targetCoordinateY, targetCoordinateY < imageHeight else {
+                    continue
+                }
+
+                let targetCoordinate = PixelCoordinate(
+                    x: targetCoordinateX,
+                    y: targetCoordinateY
+                )
+                let targetPixelColor = rightRgbGrid.pixel(targetCoordinate)
+                let labDeltaE = baseColor.labDistance(from: targetPixelColor)
+                if labDeltaE < minLabDeltaE {
+                    minLabDeltaE = labDeltaE
+                }
+            }
+        }
+        return minLabDeltaE > 0.01 // FIXME: 閾値調整
     }
 }
