@@ -27,12 +27,8 @@ struct NoiseReductionTask: CreateImageTaskExecutable {
         var regions = await mask.getRegionSet(imageSize: imageSize)
         regions = regions.reduceSmallRegion()
         regions = try await regions.reduceByCompositeScore(leftImage: previewLeftCgImage, rightImage: previewRightCgImage)
-
-        // 差分マスク外の領域を計算し、さらに反転して穴凹除去
-        let reversedRegions = await regions.reverse(imageSize: imageSize)
-        let largestReversedRegion = reversedRegions.getLargestRegion()
-        let noiseRemovedRegions = await largestReversedRegion.reverse(size: imageSize)
-        mask = ImageMask(regionSet: noiseRemovedRegions)
+        regions = await regions.removeHoles(imageSize: imageSize)
+        mask = ImageMask(regionSet: regions)
 
         // ResultPayloadを作成
         let differencesOnLeftImage = try await previewLeftCgImage.extractPixels(at: mask.coordinates)
@@ -224,6 +220,13 @@ private extension PixelRegionSet {
         let imageMask = ImageMask(coordinates: reversedCoordinates)
         let regions = await imageMask.getRegionSet(imageSize: imageSize)
         return regions
+    }
+
+    func removeHoles(imageSize: CGSize) async -> PixelRegionSet {
+        let reversedRegions = await self.reverse(imageSize: imageSize)
+        let largestReversedRegion = reversedRegions.getLargestRegion()
+        let noiseRemovedRegions = await largestReversedRegion.reverse(size: imageSize)
+        return noiseRemovedRegions
     }
 }
 
